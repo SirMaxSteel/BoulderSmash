@@ -8,12 +8,12 @@ var themes = {
     3: "assets/test.png"
 }
 var activeTheme;
+var tileSize;
 
 
 function game(){
     canvas = document.getElementById("gameCanvas");
     ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#000000";
     draw();
     loadAssets();
 }
@@ -64,8 +64,28 @@ function draw(){
     }
 }
 
+window.addEventListener('resize', onResize, false);
+
+function onResize(){
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    if(canvas.width/40 <= canvas.height/24){
+        tileSize = Math.floor(canvas.width/40);
+    }
+    else{
+        tileSize = Math.floor(canvas.height/24);
+    }
+    draw();
+}
+
 function drawLoading(){
-    console.log('test');
+    ctx.background = "#000000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.font = '19pt Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseLine = 'middle';
+    ctx.fillStyle = 'yellow';
+    ctx.fillText('BoulderSmash', canvas.width/2, canvas.height/2);
 }
 
 function drawMenu(){
