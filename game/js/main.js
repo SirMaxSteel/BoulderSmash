@@ -37,7 +37,7 @@ function loadAssets(){
     var checkFinished  = function(){
         if (finished == 0){
             fullyLoaded = 1;
-            currentScreen = 1;
+            //currentScreen = 1;
         }
         else setTimeout(checkFinished, 500);
     }
