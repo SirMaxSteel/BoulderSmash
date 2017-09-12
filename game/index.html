@@ -7,8 +7,20 @@
     <title>Document</title>
 </head>
 <body>
-    <div id="holder">
-        <canvas id="gameCanvas"></canvas>            
+    <div id="gameHolder">
+        <div id="loadingScreen" class="overlayScreen">
+            <div id="loadingTextHolder">
+                <p id="loadingText">Boulder Smash</p>
+            </div>
+            <div id="gameVersion">v.1</div>
+            <div id="loadingSpinner">
+                <div class="inner one"></div>
+                <div class="inner two"></div>
+                <div class="inner three"></div>
+            </div>
+        </div>
+        <div id="menuScreen" class="overlayScreen"></div>
+        <canvas id="gameCanvas"></canvas>
     </div>
     
 </body>
