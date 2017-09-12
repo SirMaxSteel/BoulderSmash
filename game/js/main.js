@@ -395,15 +395,511 @@ BoulderDash = function()
             }
         },
 
-        update: function() {
+        update: function() 
+        {
             this.beginFrame();
-            this.eachCell(function(cell) {
-              if (cell.frame < this.frame) {
+            this.eachCell(
+            function(cell) 
+            {
+              if (cell.frame < this.frame) 
+              {
                 if(cell.object.update)
                   eval(cell.object.update);
               }
             });
             this.endFrame();
-          },
+        },
+
+        decreaseTimer: function(n) 
+        {
+            this.timer = Math.max(0, this.timer - (n || 1));
+            this.triggerEvent('timer', this.timer);
+            return (this.timer === 0);
+        },
+
+        autoDecreaseTimer: function() 
+        {
+            if ((this.frame > this.birth) && ((this.frame % this.FPS) == 0))
+            this.decreaseTimer(1);
+        },
+
+        runOutTimer: function() 
+        {
+            var amount = Math.min(3, this.timer);
+            this.increaseScore(amount);
+            if (this.decreaseTimer(amount))
+                this.next();
+        },
+
+        collectDiamond: function() 
+        {
+            this.diamonds.collected++;
+            this.increaseScore(this.diamonds.collected > this.diamonds.needed ? this.diamonds.extra : this.diamonds.value);
+            this.triggerEvent('diamond', this.diamonds);
+        },
+
+        increaseScore: function(n) 
+        {
+            this.score += n;
+            this.triggerEvent('score', this.score);
+        },
+
+        flashWhenEnoughDiamondsCollected: function() 
+        {
+            if (!this.flash && (this.diamonds.collected >= this.diamonds.needed))
+                this.flash = this.frame + Math.round(this.FPS/5); // flash for 1/5th of a second 
+      
+            if (this.frame <= this.flash)
+                this.triggerEvent('flash');
+        },
+
+        loseLevel: function() 
+        {
+            //TODO: show loosing screen with highscore card
+            this.init();
+        },
+
+        winLevel: function() 
+        {
+            this.won = true;
+        },
+
+        beginFrame: function() 
+        {
+            this.frame++;
+            this.amoeba.size     = 0;
+            this.amoeba.enclosed = true;
+            this.idle = moving.dir ? {} : 
+            {
+                blink: (randomInt(1,4)==1)  ? !this.idle.blink : this.idle.blink,
+                tap:   (randomInt(1,16)==1) ? !this.idle.tap   : this.idle.tap
+            }
+        },
+
+        endFrame: function() 
+        {
+            if (!this.amoeba.dead) 
+            {
+                if (this.amoeba.enclosed)
+                    this.amoeba.dead = OBJECT.DIAMOND;
+                else if (this.amoeba.size > this.amoeba.max)
+                    this.amoeba.dead = OBJECT.BOULDER;
+                else if (this.amoeba.slow > 0)
+                    this.amoeba.slow--;
+            }     
+      
+            this.magic.active = this.magic.active && (--this.magic.time > 0);
+            this.flashWhenEnoughDiamondsCollected();
+      
+            if (this.won)
+                this.runOutTimer();
+            else if (this.frame - this.foundRockford > (4 * this.FPS))
+                this.loseLevel();
+            else
+                this.autoDecreaseTimer();
+        },
+
+        updatePreRockford: function(point, numb) 
+        {
+            if (this.frame >= this.birth)
+                this.set(point, PREROCKFORDS[numb+1]);
+        },
+
+        updatePreOutbox: function(point) 
+        {
+            if (this.diamonds.collected >= this.diamonds.needed)
+                this.set(point, OBJECT.OUTBOX);
+        },
+
+        updateRockford: function(point, direction) 
+        {
+            this.foundRockford = this.frame;
+      
+            if (this.won) 
+            {
+                //TODO: display waitscreen for next stage
+            }
+            else if (this.timer === 0) 
+            {
+                this.explode(point);
+            }
+            else if (moving.grab) 
+            {
+                if (this.isdirt(point, direction)) 
+                {
+                    this.clear(point, direction);
+                }
+                else if (this.isdiamond(point,direction) || this.isfallingdiamond(point, direction)) 
+                {
+                    this.clear(point, direction);
+                    this.collectDiamond();
+                }
+                else if (horizontal(direction) && this.isboulder(point, direction)) 
+                {
+                    this.push(point, direction);
+                }
+            }
+            else if (this.isempty(point, direction) || this.isdirt(point, direction)) 
+            {
+                this.move(point, direction, OBJECT.ROCKFORD);
+            }
+            else if (this.isdiamond(point, direction)) 
+            {
+                this.move(point, direction, OBJECT.ROCKFORD);
+                this.collectDiamond();
+            }
+            else if (horizontal(direction) && this.isboulder(point, direction)) 
+            {
+                this.push(point, direction);
+            }
+            else if (this.isoutbox(point, direction)) 
+            {
+                this.move(point, direction, OBJECT.ROCKFORD);
+                this.winLevel();
+            }
+        },
+
+        updateBoulder: function(point) 
+        {
+            if (this.isempty(point, DIR.DOWN))
+                this.set(point, OBJECT.BOULDERFALLING);
+            else if (this.isrounded(point, DIR.DOWN) && this.isempty(point, DIR.LEFT) && this.isempty(point, DIR.DOWNLEFT))
+                this.move(point, DIR.LEFT, OBJECT.BOULDERFALLING);
+            else if (this.isrounded(point, DIR.DOWN) && this.isempty(point, DIR.RIGHT) && this.isempty(point, DIR.DOWNRIGHT))
+                this.move(point, DIR.RIGHT, OBJECT.BOULDERFALLING);
+        },
+
+        updateBoulderFalling: function(point) 
+        {
+            if (this.isempty(point, DIR.DOWN))
+                this.move(point, DIR.DOWN, OBJECT.BOULDERFALLING);
+            else if (this.isexplodable(point, DIR.DOWN))
+                this.explode(point, DIR.DOWN);
+            else if (this.ismagic(point, DIR.DOWN))
+                this.domagic(point, OBJECT.DIAMOND);
+            else if (this.isrounded(point, DIR.DOWN) && this.isempty(point, DIR.LEFT) && this.isempty(point, DIR.DOWNLEFT))
+                this.move(point, DIR.LEFT, OBJECT.BOULDERFALLING);
+            else if (this.isrounded(point, DIR.DOWN) && this.isempty(point, DIR.RIGHT) && this.isempty(point, DIR.DOWNRIGHT))
+                this.move(point, DIR.RIGHT, OBJECT.BOULDERFALLING);
+            else
+                this.set(point, OBJECT.BOULDER);
+        },
+
+        updateDiamond: function(point) 
+        {
+            if (this.isempty(point, DIR.DOWN))
+                this.set(point, OBJECT.DIAMONDFALLING);
+            else if (this.isrounded(point, DIR.DOWN) && this.isempty(point, DIR.LEFT) && this.isempty(point, DIR.DOWNLEFT))
+                this.move(point, DIR.LEFT, OBJECT.DIAMONDFALLING);
+            else if (this.isrounded(point, DIR.DOWN) && this.isempty(point, DIR.RIGHT) && this.isempty(point, DIR.DOWNRIGHT))
+                this.move(point, DIR.RIGHT, OBJECT.DIAMONDFALLING);
+        },
+
+        updateDiamondFalling: function(point) 
+        {
+            if (this.isempty(point, DIR.DOWN))
+                this.move(point, DIR.DOWN, OBJECT.DIAMONDFALLING);
+            else if (this.isrockford(point, DIR.DOWN))
+            {
+                this.clear(point);
+                this.collectDiamond();
+            }
+            else if (this.ismagic(point, DIR.DOWN))
+                this.domagic(point, OBJECT.BOULDER);
+            else if (this.isrounded(point, DIR.DOWN) && this.isempty(point, DIR.LEFT) && this.isempty(point, DIR.DOWNLEFT))
+                this.move(point, DIR.LEFT, OBJECT.DIAMONDFALLING);
+            else if (this.isrounded(point, DIR.DOWN) && this.isempty(point, DIR.RIGHT) && this.isempty(point, DIR.DOWNRIGHT))
+                this.move(point, DIR.RIGHT, OBJECT.DIAMONDFALLING);
+            else
+                this.set(point, OBJECT.DIAMOND);
+        },
+
+        updateFirefly: function(point, direction) 
+        {
+            var tmpDir = rotateLeft(direction);
+            
+            if (this.isrockford(point, DIR.UP) || this.isrockford(point, DIR.DOWN) || this.isrockford(point, DIR.LEFT) || this.isrockford(point, DIR.RIGHT))
+                this.explode(point);
+            else if (this.isamoeba(point, DIR.UP) || this.isamoeba(point, DIR.DOWN) || this.isamoeba(point, DIR.LEFT) || this.isamoeba(point, DIR.RIGHT))
+                this.explode(point);
+            else if (this.isempty(point, tmpDir))
+                this.move(point, tmpDir, FIREFLIES[tmpDir]);
+            else if (this.isempty(point, direction))
+                this.move(point, direction, FIREFLIES[direction]);
+            else
+                this.set(point, FIREFLIES[rotateRight(direction)]);
+        },
+
+        updateButterfly: function(point, direction) 
+        {
+            var tmpDir = rotateRight(direction);
+            
+            if (this.isrockford(point, DIR.UP) || this.isrockford(point, DIR.DOWN) || this.isrockford(point, DIR.LEFT) || this.isrockford(point, DIR.RIGHT))
+                this.explode(point);
+            else if (this.isamoeba(point, DIR.UP) || this.isamoeba(point, DIR.DOWN) || this.isamoeba(point, DIR.LEFT) || this.isamoeba(point, DIR.RIGHT))
+                this.explode(point);
+            else if (this.isempty(point, tmpDir))
+                this.move(point, tmpDir, BUTTERFLIES[tmpDir]);
+            else if (this.isempty(p, dir))
+                this.move(point, direction, BUTTERFLIES[direction]);
+            else
+                this.set(point, BUTTERFLIES[rotateLeft(direction)]);
+        },
+
+        updateExplodeToSpace: function(point, frame) 
+        {
+            this.set(point, EXPLODETOSPACE[frame+1]);
+        },
+
+        updateExplodeToDiamond: function(point, frame) 
+        {
+            this.set(point, EXPLODETODIAMOND[frame+1]);
+        },
+
+        updateAmoeba: function(point) 
+        {
+            if (this.amoeba.dead) 
+            {
+                this.set(point, this.amoeba.dead);
+            }
+            else 
+            {
+                this.amoeba.size++;
+        
+                if (this.isempty(point, DIR.UP) || this.isempty(point, DIR.DOWN) || this.isempty(point, DIR.RIGHT) || this.isempty(point, DIR.LEFT) ||
+                        this.isdirt(point,  DIR.UP) || this.isdirt(point,  DIR.DOWN) || this.isdirt(point,  DIR.RIGHT) || this.isdirt(point,  DIR.LEFT)) 
+                {
+                    this.amoeba.enclosed = false;
+                }
+        
+                if (this.frame >= this.birth) 
+                {
+                    var grow = this.amoeba.slow ? (randomInt(1, 128) < 4) : (randomInt(1, 4) == 1);
+                    var direction  = randomChoice([DIR.UP, DIR.DOWN, DIR.LEFT, DIR.RIGHT]);
+          
+                    if (grow && (this.isdirt(point, direction) || this.isempty(point, direction)))
+                        this.set(point, OBJECT.AMOEBA, direction);
+                }
+            }
+        },
+
+        explode: function(point, direction) 
+        {
+            var tmpPoint        = new Point(point.x, point.y, direction);
+            var explosion = (this.isbutterfly(tmpPoint) ? OBJECT.EXPLODETODIAMOND0 : OBJECT.EXPLODETOSPACE0);
+            this.set(tmpPoint, explosion);
+      
+            for(direction = 0 ; direction < 8 ; direction++) 
+            {
+                if (this.isexplodable(tmpPoint, direction))
+                    this.explode(tmpPoint, direction);
+                else if (this.isconsumable(tmpPoint, direction))
+                    this.set(tmpPoint, explosion, direction);
+            }
+        },
+
+        push: function(point, direction) 
+        {
+            var tmpPoint = new Point(Point.x, point.y, direction);
+      
+            if (this.isempty(tmpPoint, direction)) 
+            {
+                if (randomInt(1,8) == 1) 
+                {
+                    this.move(tmpPoint, direction, OBJECT.BOULDER);
+          
+                    if (!moving.grab)
+                        this.move(point, direction, OBJECT.ROCKFORD);
+                }
+            }
+        },
+
+        domagic: function(point, toObject) 
+        {
+            if (this.magic.time > 0) 
+            {
+                this.magic.active = true;
+                this.clear(point);
+                var tmpPoint = new Point(point.x, point.y + 2);
+        
+                if (this.isempty(tmpPoint))
+                    this.set(tmpPoint, toObject);
+            }
+        },
+
+        registerEvent: function(eventName, callback, target) 
+        {
+            this.subscribers = this.subscribers || {};
+            this.subscribers[eventName] = this.subscribers[eventName] || [];
+            this.subscribers[eventName].push({ callback: callback, target: target });
+        },
+
+        triggerEvent: function(eventName) 
+        {
+            if (this.subscribers && this.subscribers[eventName]) 
+            {
+                var subs = this.subscribers[eventName];
+                var args = [].slice.call(arguments, 1);
+                var n, sub;
+        
+                for(n = 0 ; n < subs.length ; n++) 
+                {
+                    sub = subs[n];
+                    sub.callback.apply(sub.target, args);
+                }
+            }
+        }
+    }
+
+    function Render(gameObject) 
+    {
+        gameObject.registerEvent('level', this.onChangeLevel,   this);
+        gameObject.registerEvent('score', this.invalidateScore, this);
+        gameObject.registerEvent('timer', this.invalidateScore, this);
+        gameObject.registerEvent('flash', this.invalidateCave,  this);
+        gameObject.registerEvent('cell',  this.invalidateCell,  this);
+    }
+    
+    Render.prototype = 
+    {
+    
+        init: function(sprites) 
+        {
+            this.canvas     = document.getElementById('gameCanvas');
+            this.ctx        = this.canvas.getContext('2d');
+            this.sprites    = sprites;
+            this.FPS        = 30;
+            this.step       = 1/this.FPS;
+            this.frame      = 0;
+            this.ctxSprites = document.createElement('canvas').getContext('2d');
+            this.ctxSprites.canvas.width  = this.sprites.width;
+            this.ctxSprites.canvas.height = this.sprites.height;
+            this.ctxSprites.drawImage(this.sprites, 0, 0, this.sprites.width, this.sprites.height, 0, 0, this.sprites.width, this.sprites.height);
+            this.resize();
+        },
+    
+        onChangeLevel: function(info) 
+        {
+            this.colors(info.color1, info.color2);
+            this.invalidateCave();
+            this.invalidateScore();
+        },
+    
+        invalid: { score: true, cave:  true },
+        invalidateScore: function()     { this.invalid.score = true;  },
+        invalidateCave:  function()     { this.invalid.cave  = true;  },
+        invalidateCell:  function(cell) { cell.invalid       = true;  },
+        validateScore:   function()     { this.invalid.score = false; },
+        validateCave:    function()     { this.invalid.cave  = false; },
+        validateCell:    function(cell) { cell.invalid       = false; },
+    
+        update: function() 
+        {
+            this.frame++;
+            this.score();
+            game.eachCell(this.cell, this);
+            this.validateCave();
+        },
+    
+        score: function() 
+        {
+            if (this.invalid.score) 
+            {    
+                scoreLabel.innerText = 'Score: ' + game.score;
+                diamondsLabel.innerText = game.diamonds.collected + ' / ' + game.diamonds.needed;
+                timerLabel.innerText = game.timer;
+                this.validateScore();
+            }
+        },
+    
+        cell: function(cell) 
+        {
+            var object = cell.object,
+                sprite = object.sprite;
+            
+            if (this.invalid.cave || cell.invalid || (sprite.f > 1) || (object === OBJECT.ROCKFORD)) 
+            {
+                if (object === OBJECT.ROCKFORD)
+                    return this.rockford(cell);
+                else if ((object === OBJECT.SPACE) && (game.flash > game.frame))
+                    sprite = OBJECT.SPACE.flash;
+                else if ((object === OBJECT.MAGICWALL) && !game.magic.active)
+                    sprite = OBJECT.BRICKWALL.sprite;
+            
+                this.sprite(sprite, cell);
+                this.validateCell(cell);
+            }
+        },
+    
+        sprite: function(sprite, cell) 
+        { 
+            // TODO: get images another way
+            var f = sprite.f ? (Math.floor((sprite.FPS/this.FPS) * this.frame) % sprite.f) : 0;
+            this.ctx.drawImage(this.ctxSprites.canvas, (sprite.x + f) * 32, sprite.y * 32, 32, 32, cell.p.x * this.dx, (cell.p.y) * this.dy, this.dx, this.dy);
+        },
+    
+        rockford: function(cell) 
+        {
+            if ((moving.dir == DIR.LEFT) || (vertical(moving.dir) && (moving.lastXDir == DIR.LEFT)))
+                this.sprite(OBJECT.ROCKFORD.left, cell);
+            else if ((moving.dir == DIR.RIGHT) || (vertical(moving.dir) && (moving.lastXDir == DIR.RIGHT)))
+                this.sprite(OBJECT.ROCKFORD.right, cell);
+            else if (game.idle.blink && !game.idle.tap)
+                this.sprite(OBJECT.ROCKFORD.blink, cell);
+            else if (!game.idle.blink && game.idle.tap)
+                this.sprite(OBJECT.ROCKFORD.tap, cell);
+            else if (game.idle.blink && game.idle.tap)
+                this.sprite(OBJECT.ROCKFORD.blinktap, cell);
+            else
+                this.sprite(OBJECT.ROCKFORD.sprite, cell);
+        },
+    
+    
+        colors: function(color1, color2) 
+        {
+            this.ctxSprites.drawImage(this.sprites, 0, 0, this.sprites.width, this.sprites.height, 0, 0, this.sprites.width, this.sprites.height);
+            var pixels = this.ctxSprites.getImageData(0, 0, this.sprites.width, this.sprites.height);
+            var x, y, n, r, g, b, a;
+            
+            for(y = 0 ; y < this.sprites.height ; ++y) 
+            {
+                for(x = 0 ; x < this.sprites.width ; ++x) 
+                {
+                    n = (y*this.sprites.width*4) + (x*4);
+                    color = (pixels.data[n + 0] << 16) + 
+                            (pixels.data[n + 1] << 8) +
+                            (pixels.data[n + 2] << 0);
+              
+                    if (color == 0x3F3F3F) 
+                    { 
+                        // mostly the metalic wall
+                        pixels.data[n + 0] = (color2 >> 16) & 0xFF;
+                        pixels.data[n + 1] = (color2 >> 8)  & 0xFF;
+                        pixels.data[n + 2] = (color2 >> 0)  & 0xFF;
+                    }
+                    else if (color == 0xA52A00) 
+                    { 
+                        // mostly the dirt
+                        pixels.data[n + 0] = (color1 >> 16) & 0xFF;
+                        pixels.data[n + 1] = (color1 >> 8)  & 0xFF;
+                        pixels.data[n + 2] = (color1 >> 0)  & 0xFF;
+                    }
+                }
+            }
+            
+            this.ctxSprites.putImageData(pixels, 0, 0);
+        },
+    
+        resize: function() 
+        {
+            var visibleArea = { w: 40, h: 22 };            
+            this.canvas.width  = this.canvas.clientWidth;  
+            this.canvas.height = this.canvas.clientHeight; 
+            this.dx = this.canvas.width  / visibleArea.w;
+            this.dy = this.canvas.height / visibleArea.h;  
+            this.invalidateScore();
+            this.invalidateCave();
+        }
+    
     }
 }
