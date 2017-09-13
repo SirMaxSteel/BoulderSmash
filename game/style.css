@@ -1,6 +1,8 @@
 #gameHolder{
     width: 1200px;
     height: 800px;
+    cursor: default;
+    user-select: none;
 }
 
 #gameHolder #gameCanvas{
@@ -33,7 +35,7 @@
 
 #gameHolder #loadingText{
     margin: auto;
-    color: blue;
+    color: #a46e2f;
     font-family: sans-serif;
     font-size: 5rem;
 }
@@ -44,7 +46,6 @@
     bottom: 0px;
     color: #d3d3d3;
     font-family: sans-serif;
-    margin: .5rem
 }
 
 /* Loading spinner */
@@ -62,7 +63,7 @@
 }
 
 #gameHolder  #loadingSpinner .inner {
-    border-color: #FC8F12;
+    border-color: #a46e2f;
     position: absolute;
     box-sizing: border-box;
     width: 100%;
@@ -122,27 +123,135 @@
 /* Menu Screen */
 /* ----------- */
 
+/* Menu Text Slide */
+
+#gameHolder #menuTextSlide{
+    position: relative;
+    transform: translateZ(0); /* Chrome overflow fix */
+    overflow: hidden;
+}
+
+#gameHolder #menuTextSlide div{
+    color: #ffffff;
+    font-family: sans-serif;
+    font-size: 11rem;
+    transform: rotate(-90deg);
+    animation: slideOver 12s linear infinite;
+    position: absolute;
+    left: 0;
+    right: 0;
+}
+
+@keyframes slideOver{
+    0%{
+        bottom: 150%;
+    }
+    100%{
+        bottom: -150%
+    }
+}
+
 #gameHolder #menuScreen{
     background-color: #000000;
 }
 
-#gameHolder #menuText{
-    width: 100%;
-    height: 20%;
+#gameHolder .menuContainer{
+    width: calc(100% / 3);
+    height: 100%;
     float: left;
 }
 
-#gameHolder .menuContainer{
-    width: calc(100% / 3);
+/* Menu Theme */
+
+#gameHolder #menuTheme{
+    width: 100%;    
+    height: 55%;
+    position: relative;
+}
+
+#gameHolder #menuThemeText{
+    width: 100%;
+    height: 20%;
+    display: flex;
+    font-family: sans-serif;
+    color: #ffffff;
+    font-size: 2rem;
+}
+
+#gameHolder #menuThemeText span{
+    margin: auto;
+}
+
+/* Menu Theme Selector */
+
+#gameHolder #menuThemeSelector{
+    width: 100%;
     height: 80%;
+    position: relative;
+}
+
+#gameHolder #menuThemeSelector div[id^="Theme"]{
+    position: relative;
     float: left;
+}
+
+#gameHolder #ThemePrevious{
+    width: 20%;
+    height: 80%;
+}
+
+#gameHolder #ThemeCurrent{
+    width: 60%;
+    height: 80%;
+}
+
+#gameHolder #ThemeNext{
+    width: 20%;
+    height: 80%;
+}
+
+#gameHolder #ThemeName{
+    width: 100%;
+    height: 20%;
+    display: flex;
+    color: #ffffff;
+    font-family: sans-serif;
+    font-size: 1rem;
+}
+
+#gameHolder #ThemeName span{
+    margin: auto;
+}
+
+/* Menu Buttons */
+
+#gameHolder #menuButtons{
+    width: 100%;    
+    height: 45%;
+}
+
+#gameHolder .menuButton{
+    width: 75%;
+    height: 17%;
+    margin: auto;
+    cursor: pointer;
+    border-radius: 10px;
+    display: flex;
+    border: 1px solid #a46e2f;
+    color: #ffffff;
+    user-select: none;
+}
+
+#gameHolder .menuButton span{
+    font-family: sans-serif;
+    font-size: 2rem;
+    margin: auto;
 }
 
 /* Menu Score */
 
 #gameHolder #menuScoreText{
     width: 100%;
-    height: 10%;
     display: flex;
     font-family: sans-serif;
     color: #ffffff;
@@ -155,7 +264,7 @@
 
 #gameHolder #menuScoreScores{
     width: 100%;
-    height: 80%;
+    height: 100%;
     color: #ffffff;
     font-family: sans-serif;
     font-size: 1.2rem;
@@ -180,24 +289,18 @@
     width: 30%;
 }
 
-/* Menu Buttons */
 
-#gameHolder .menuButton{
-    width: 75%;
-    height: 10%;
-    margin: auto;
-    margin-top: 10%;
-    background: green;
-    cursor: pointer;
-    border-radius: 10px;
-    display: flex;
-}
 
-#gameHolder .menuButton span{
-    font-family: sans-serif;
-    font-size: 2rem;
-    margin: auto;
-}
+
+
+
+
+
+
+
+
+
+
 
 .modal{
     display:none;

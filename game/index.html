@@ -8,7 +8,7 @@
 </head>
 <body>
     <div id="gameHolder">
-        <div id="loadingScreen" class="overlayScreen" style="display:none">
+        <div id="loadingScreen" oncontextmenu="return false;"  class="overlayScreen" style="display:none">
             <div id="loadingTextHolder">
                 <p id="loadingText">Boulder Smash</p>
             </div>
@@ -19,8 +19,40 @@
                 <div class="inner three"></div>
             </div>
         </div>
-        <div id="menuScreen" class="overlayScreen">
-            <div id="menuText" class="menuContainer"></div>
+        <div id="menuScreen" oncontextmenu="return false;" class="overlayScreen" style="display:block">
+            <div id="menuTextSlide" class="menuContainer">
+                <div>BoulderSmash</div>
+            </div>
+            <div id="menuMenu" class="menuContainer">
+                <div id="menuTheme">
+                    <div id="menuThemeText">
+                        <span>Themes</span>
+                    </div>
+                    <div id="menuThemeSelector">
+                        <div id="ThemePrevious"></div>
+                        <div id="ThemeCurrent"></div>
+                        <div id="ThemeNext"></div>
+                        <div id="ThemeName">
+                            <span>Test Text</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="menuButtons">
+                    <div style="height: 6%;"></div>                        
+                    <div id="menuPlay" class="menuButton">
+                        <span>Play</span>
+                    </div>
+                    <div style="height: 6%;"></div>
+                    <div id="menuCommunity" class="menuButton">
+                        <span>Community</span>
+                    </div>
+                    <div style="height: 6%;"></div>                    
+                    <div id="menuMapEditor" class="menuButton">
+                        <span>Map Editor</span>
+                    </div>
+                </div>
+            </div>
             <div id="menuScore" class="menuContainer">
                 <div id="menuScoreText">
                     <span>Highscore</span>
@@ -78,22 +110,8 @@
                     </div>
                 </div>
             </div>
-            <div id="menuMenu" class="menuContainer">
-                <div style="height:40%"></div>
-                <div id="menuPlay" class="menuButton">
-                    <span>Play</span>
-                </div>
-                <div id="menuCommunity" class="menuButton">
-                    <span>Community</span>
-                </div>
-                <div id="menuMapEfitor" class="menuButton">
-                    <span>Map Editor</span>
-                </div>
-            </div>
-            <div id="menuThemes" class="menuContainer"></div>
         </div>
-        <div id="gamebar"><span id="diamondsLabel" class="gamebarLabel">000</span> <span id="titleLabel" class="gamebarLabel">BDR - Projekt</span> <span id="scoreLabel" class="gamebarLabel">Score: 000</span> <span id="timerLabel" class="gamebarLabel"></span></div>
-        <canvas id="gameCanvas"></canvas>
+        <canvas id="gameCanvas" style="display:none"></canvas>
         <div id="modalMapSelection" class="modal">
             <div class="modal-box modal-shadow modalZoomIn">
                 <div class="modal-header">
