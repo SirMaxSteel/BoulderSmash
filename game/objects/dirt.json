@@ -1,0 +1,8 @@
+{
+  "id": "dirt",
+  "sprite": { "x": 1, "y": 7 },
+  "isSticky": true,
+  "category": "Dirt",
+  "canBeDestroyed": true,
+  "objectCode":6
+}

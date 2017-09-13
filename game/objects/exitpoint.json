@@ -1,0 +1,9 @@
+{
+  "id": "exitpoint",
+  "sprite": { "x": 2, "y": 6 },
+  "isSticky": true,
+  "isVisible": false,
+  "category": "Special",
+  "hasValue": false,
+  "objectCode":2
+}

@@ -1,0 +1,9 @@
+{
+  "id": "entrypoint",
+  "sprite": { "x": 1, "y": 6, "f": 2, "FPS": 4 },
+  "isSticky": true,
+  "isVisible": false,
+  "category": "Special",
+  "hasValue": false,
+  "objectCode":1
+}

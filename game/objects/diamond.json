@@ -1,0 +1,9 @@
+{
+  "id": "diamond",
+  "sprite": { "x": 0, "y": 10, "f": 8, "FPS": 20 },
+  "isSticky": false,
+  "category": "Jewel",
+  "hasValue": true,
+  "value": 15,
+  "objectCode":20		
+}

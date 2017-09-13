@@ -1,0 +1,8 @@
+{
+  "id": "Firefly",
+  "sprite": { "x": 0, "y": 9, "f": 8, "FPS": 20 },
+  "isSticky": false,
+  "category": "Animal",
+  "canBeDestroyed": true,
+"objectCode":28
+}

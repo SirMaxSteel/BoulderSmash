@@ -1,0 +1,8 @@
+{
+  "id": "wall",
+  "sprite": { "x": 3, "y": 6 },
+  "isSticky": true,
+  "category": "Wall",
+  "canBeDestroyed": false,
+  "objectCode": 8
+}
