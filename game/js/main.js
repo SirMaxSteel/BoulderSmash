@@ -881,7 +881,7 @@ function drawCommunity(){
 
 BoulderDash = function()
 {
-    var KEY = { ENTER: 13, ESC: 27, SPACE: 32, PAGEUP: 33, PAGEDOWN: 34, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, F: 70, W: 82, A: 65, S: 83, D: 68, E: 69, M: 77 };
+    var KEY = { ENTER: 13, ESC: 27, SPACE: 32, PAGEUP: 33, PAGEDOWN: 34, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, F: 70, W: 87, A: 65, S: 83, D: 68, E: 69, M: 77 };
 
     function random(min, max)       { return (min + (Math.random() * (max - min)));            };
     function randomInt(min, max)    { return Math.floor(random(min,max));                      };
