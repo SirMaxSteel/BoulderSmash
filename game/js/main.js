@@ -5,34 +5,694 @@ var maps;
 var selectedMapBlock;
 
 var map;
-var ctx;
 
 var canvholder;
 
-var Caves;
-
-var scoreLabel, diamondsLabel, timerLabel;
+var scoreLabel, diamondsLabel, timeLabel;
 
 var canvas;
 var ctx;
 var fullyLoaded = 0;
 var currentScreen = 0; // 0 = Loading; 1 = Menu; 2 = Game; 3 = MapEditor; 4 = Community;
+
 var themes = {
     1: "assets/test.png",
     2: "assets/test.png",
     3: "assets/test.png"
 }
+
 var activeTheme;
 var tileSize;
 var mapsLoaded = 0;
 
 
-document.addEventListener('DOMContentLoaded', init, false);
+document.addEventListener('DOMContentLoaded', game, false);
 window.addEventListener('resize', onResize, false);
 
-function game(){
+var Util = (function () {
 
-    window.onkeyup = keyUpHandler;
+    var _pubEvents = [];
+
+    var _menuPositionX;
+    var _menuPositionY;
+
+    var _contextmenuState = 0;
+    var _contextmenuActiveClass = 'contextmenu_active';
+    
+    var _menuPosition;
+    
+    var MAPTYPE = {
+        C64: 1,
+        BD: 2,
+        BDR: 3
+    };
+    
+    var MSGBUTTON = {
+        AbortRetryIgnore:1,
+        Ok:2,
+        OkCancel:3,
+        RetryCancel:4,
+        YesNo:5,
+        YesNoCancel:6 
+    };
+    
+
+    var registerPubEvent = function(eventName, callback, target) 
+    {
+        _pubEvents = _pubEvents || {};
+        _pubEvents[eventName] = _pubEvents[eventName] || [];
+        _pubEvents[eventName].push({ callback: callback, target: target });
+    };
+
+    var triggerPubEvent = function(eventName)
+    {
+        if (_pubEvents && _pubEvents[eventName]) 
+        {
+            var listeners = _pubEvents[eventName];
+            var args = [].slice.call(arguments, 1);
+            var n, listener;
+        
+            for(n = 0 ; n < listeners.length ; ++n) 
+            {
+                listener = listeners[n];
+
+                if(!listener.callback)
+                    console.log('no callback');
+
+                listener.callback.apply(listener.target, args);
+            }
+        }
+    };
+    
+    
+    function toggleContextMenuOn(contextMenu)
+    {
+        "use strict";
+
+        if(_contextmenuState !== 1)
+        {
+            _contextmenuState = 1;
+            contextMenu.classList.add(_contextmenuActiveClass);
+        }
+    };
+
+    function toggleContextMenuOff(contextMenu)
+    {
+        if(_contextmenuState === 1)
+        {
+            _contextmenuState = 0;
+
+            contextMenu.classList.remove(_contextmenuActiveClass);
+        }
+    };
+
+    function positionContextMenu(ev)
+    {
+        _menuPosition = getMousePosition(ev);
+
+        var menuWidth = contextmenu.offsetWidth + 4;
+        var menuHeight = contextmenu.offsetHeight + 4;
+
+        _menuPositionX = menuPosition.x + 'px';
+        _menuPositionY = menuPosition.y + 'px';
+
+        contextmenu.style.left = _menuPositionX;
+        contextmenu.style.top = _menuPositionY;   
+
+        if((window.innerWidth - _menuPosition.x) < menuWidth)
+        {
+            contextmenu.style.left = window.innerWidth - menuWidth + 'px';
+        }
+
+        if((window.innerHeight - _menuPosition.y) < menuHeight)
+        {
+            contextmenu.style.top = window.innerHeight - menuHeight + 'px';
+        }
+    };
+
+    function clickInsideElement(ev, idName)
+    {
+        var el = ev.srcElement || ev.target;
+
+        if(el.id === idName)
+        {
+            return el;
+        }
+        else
+        {
+            while( el = el.parentNode)
+            {
+                if(el.id && el.id === idName)
+                {
+                    return el;
+                }
+            }
+        }
+
+        return false;
+    };
+
+    function getMousePosition(ev)
+    {
+        var posX = 0;
+        var posY = 0;
+
+        if(!ev)
+        {
+            var ev = window.event;
+        }
+
+        if(ev.pageX || ev.pageY)
+        {
+            posX = ev.pageX;
+            posY = ev.pageY;
+        }
+        else if(ev.clientX || ev.clientY)
+        {
+            posX = ev.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+            posY = ev.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+        }
+
+        return {
+            x: posX,
+            y: posY
+        };
+    };
+
+    function Map (name, width, height, map, mapType) {
+        
+            this.name = name;
+        
+            this.description = '';
+        
+            this.width = width;
+        
+            this.height = height;
+        
+            this.map = map || [];
+        
+            this.diamondsNeeded = 0;
+            this.magicWallMillingTime = 3;
+            this.amoebaSlowGrowthTime = 3;
+            this.initialDiamondValue = 15;
+            this.extraDiamondValue = 20;
+            this.time = 150;
+        
+            this.mapType = mapType || MAPTYPE.BD;
+        
+            this.color1 = 0x6A5400;
+            this.color2 = 0x8A8A8A;
+           
+           
+        
+            this.addTile = function(code, col, row)
+            {
+                this.map[row] = this.map[row] || [];
+                this.map[row][col] = parseInt(code);
+            };
+        
+            this.drawLine = function(code, x, y, length, dir) 
+            {
+                var dx = [ 0,  1, 1, 1, 0, -1, -1, -1 ][dir],
+                dy = [-1, -1, 0, 1, 1,  1,  0, -1 ][dir];
+        
+                for(var n = 0 ; n < length ; n++) 
+                {
+                    this.addTile(code, x, y);
+                    x += dx;
+                    y += dy;
+                }
+            };
+        
+            this.drawRect = function(code, x, y, width, height) 
+            {
+                this.drawLine(code, x,         y,          width,   DIR.RIGHT);
+                this.drawLine(code, x,         y+height-1, width,   DIR.RIGHT);
+                this.drawLine(code, x,         y,          height,  DIR.DOWN);
+                this.drawLine(code, x+width-1, y,          height,  DIR.DOWN);
+            };
+        
+        
+            if(this.map.length === 0)
+            {
+                for(y = 0; y < this.height; y++)
+                {
+                   this.map[y] = [];
+        
+                   //initial new map with dirt
+                   for(var x = 0; x < this.width; x++)
+                    this.map[y][x] = 6;
+        
+                  //Draw the border Rect
+                    this.drawRect(9, 0, 0, this.width, this.height);
+                }                
+            }
+           
+        
+            this.generateFromJSONString = function(jsonString)
+            {
+                var tempObj = JSON.parse(jsonString);
+        
+                this.generateFromJSONObject(tempObj);
+            };
+        
+            this.generateFromJSONObject = function(jsonObject)
+            {
+                this.name =jsonObject.name;
+                this.map=jsonObject.map;
+                this.height=jsonObject.height;
+                this.width=jsonObject.width;
+            };
+        
+        
+            this.getTiles = function()
+            {
+                return this.map;
+            };
+        
+            this.getTileAt = function(col, row) 
+            {
+                return this.map[row][col];
+            };
+        
+            this.tileExistsAt = function(col, row)
+            {        
+                return this.map[row][col] !== 0x00;
+            };
+        
+            this.removeTileObject = function(col, row)
+            {
+                //var index = this.tiles.findIndex( x => x.col === col && x.row === row)
+        
+                //this.tiles.splice(index, 1);
+        
+                this.map[row][col] = 0x00;
+            };
+        }
+        
+        function selectMapBlock(ev) {
+        
+            if(selectedMapBlock) {
+                selectedMapBlock.classList.remove('selectedBlueBorder');
+            }
+        
+            selectedMapBlock = ev.target;
+            selectedMapBlock.classList.add('selectedBlueBorder')
+        
+            var btnOk = document.getElementById('btnMapSelectionOk');
+        
+            btnOk.removeAttribute('disabled');
+        }
+        
+        function drawMap(ctx, map, isEngine)
+        {   
+            if(!ctx)
+            {
+                console.log('context null');
+                return;
+            }
+        
+            if(!map)
+            {
+                ctx.fillStyle ='#ffffff';
+                ctx.textBaseline='middle';
+                ctx.textAlign='center';
+                ctx.font='24px Arial';
+                ctx.fillText('Load a map or create one.', canvas.width/2, canvas.height/2);
+                return;
+            }
+        
+            var tiles = map.getTiles();
+        
+            var tileSize = parseInt(ctx.canvas.clientWidth / 40);
+        
+        
+            var tileWidth = tileSize;
+            var tileHeight = tileSize;
+        
+        
+            if(isEngine) 
+            {
+                tileWidth = tileSize - 2;
+                tileHeight = tileSize - 2;
+            }
+        
+            for(var y = 0; y < tiles.length; y++)
+               for(var x = 0; x < tiles[y].length; x++)
+               {
+                    var tileCode = tiles[y][x];
+        
+                    var ele;
+        
+                    if(isEngine) {
+                        ele = document.getElementById(tileCode);
+                    }
+                    else {
+                    
+                    }
+        
+                    if(ele)
+                    {
+                        ctx.drawImage(ele, x * tileSize + 1, y * tileSize + 1, tileWidth, tileHeight);
+                    }
+               }
+        };
+
+        return { // keep this damn bracket here!!!
+            registerPubEvent: registerPubEvent,
+            triggerPubEvent: triggerPubEvent,
+            toggleContextMenuOn: toggleContextMenuOn,
+            toggleContextMenuOff: toggleContextMenuOff,
+            positionContextMenu: positionContextMenu,
+            getMousePosition: getMousePosition,
+            clickInsideElement: clickInsideElement,
+            Map:Map,
+            drawMap: drawMap,
+            MAPTYPE: MAPTYPE,
+            MSGBUTTON:MSGBUTTON
+        };
+})();
+
+var AJAX = (function()
+{
+    var _objectList;
+    
+    var getObjects = function(isEngine)
+    {
+        var xmlHttp = new XMLHttpRequest();
+    
+        xmlHttp.onreadystatechange = function () {
+            if(this.readyState == 4 && this.status == 200)
+            {
+                objectList = JSON.parse(this.responseText);
+    
+                if(isEngine)
+                {
+                    loadImages();
+                }
+
+                Util.triggerPubEvent('objectsLoaded');
+            }
+        };
+    
+        xmlHttp.open('GET', '../php/loadObjects.php');
+        xmlHttp.send();
+    };
+    
+    var saveMap = function()
+    {
+        var xmlHttp = new XMLHttpRequest();
+    
+        xmlHttp.onreadystatechange = function () {
+            if(this.readyState == 4 && this.status == 200)
+            {
+                unsavedChanges = false;
+                console.log(this.responseText);
+                alert('Map saved successfully');
+
+                Util.triggerPubEvent('mapSaved');
+            }
+        };
+    
+        if(map && map.map && map.map.length > 0 && unsavedChanges)
+        {
+            xmlHttp.open('POST', '../php/saveMap.php');
+            xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            xmlHttp.send(JSON.stringify(map));
+        }
+        else
+        {
+            alert('No data to save');
+        }
+    };
+    
+    function loadMaps()
+    {
+        var xmlHttp = new XMLHttpRequest();
+    
+        xmlHttp.onreadystatechange = function () {
+            if(this.readyState == 4 && this.status == 200 && this.responseText && this.responseText != '')
+            {
+                var loadedMaps = JSON.parse(this.responseText);
+    
+                var tempMapArray = [];
+    
+                var tempNameCounter = 1;
+    
+                for(var i = 0; i < loadedMaps.length; i++)
+                {   
+                    var tObj = loadedMaps[i];
+    
+                    if(!tObj.name)
+                    {
+                        tObj.name = 'Anonym' + tempNameCounter;
+                        tempNameCounter++;
+                    }
+    
+                    var tMap = new Util.Map(tObj.name, tObj.width, tObj.height, tObj.map, tObj.mapType);
+    
+                    tMap.color1 = tObj.color1 || 0x6A5400;
+                    tMap.color2 = tObj.color2 || 0x8A8A8A;
+                    tMap.diamondsNeeded = tObj.diamondsNeeded || tObj.winCondition || 0;
+                    tMap.time = tObj.time || 150;
+                    tMap.magicWallMillingTime = tObj.magicWallMillingTime || 3;
+                    tMap.amoebaSlowGrowthTime = tObj.amoebaSlowGrowthTime || 3;
+                    tMapinitialDiamondValue = tObj.initialDiamondValue || 15;
+                    tMap.extraDiamondValue =  tObj.extraDiamondValue || 20;
+    
+                    tempMapArray.push(tMap);
+                }
+    
+                maps = tempMapArray;
+    
+                var modalMapSelection = document.getElementById('modalMapSelection');
+    
+                if(!modalMapSelection) {
+                    return false; 
+                }
+    
+                var mapListHolder = document.getElementById('mapListHolder');
+    
+    
+                //remove all childnodes
+                while (mapListHolder.firstChild) {
+                    mapListHolder.removeChild(mapListHolder.firstChild);
+                }
+    
+                for(var i = 0; i < maps.length; i++)
+                {
+                    var mapBlock = document.createElement('span');
+    
+                    mapBlock.className = 'mapBlock';
+                    mapBlock.innerHTML = maps[i].name;
+                    mapBlock.id = maps[i].name;
+                    mapBlock.setAttribute('ondblclick', 'openMap(event)');
+                    mapBlock.setAttribute('onclick', 'selectMapBlock(event)');
+                    mapListHolder.appendChild(mapBlock);
+                }
+    
+                Util.triggerPubEvent('mapsLoaded', maps);
+            }
+        };
+    
+        xmlHttp.open('GET', '../php/loadMaps.php');
+        xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xmlHttp.send();
+    };
+
+    return {
+        getObjects: getObjects,
+        saveMap: saveMap,
+        loadMaps: loadMaps
+    };
+    
+})();
+
+var Cave = (function()
+{
+    var Caves = function() 
+    {      
+        var caveList = [];
+        
+        var COLORS = 
+        { 
+            BLACK:      { n: 0x00, rgb: 0x000000 },
+            WHITE:      { n: 0x01, rgb: 0xFFFFFF },
+            RED:        { n: 0x02, rgb: 0x984B43 },
+            CYAN:       { n: 0x03, rgb: 0x79C1C8 },
+            PURPLE:     { n: 0x04, rgb: 0x9B51A5 },
+            GREEN:      { n: 0x05, rgb: 0x68AE5C },
+            BLUE:       { n: 0x06, rgb: 0x52429D },
+            YELLOW:     { n: 0x07, rgb: 0xC9D684 },
+            ORANGE:     { n: 0x08, rgb: 0x9B6739 },
+            BROWN:      { n: 0x09, rgb: 0x6A5400 },
+            LIGHTRED:   { n: 0x0A, rgb: 0xC37B75 },
+            DARKGRAY:   { n: 0x0B, rgb: 0x636363 },
+            GRAY:       { n: 0x0C, rgb: 0x8A8A8A },
+            LIGHTGREEN: { n: 0x0D, rgb: 0xA3E599 },
+            LIGHTBLUE:  { n: 0x0E, rgb: 0x8A7BCE },
+            LIGHTGRAY:  { n: 0x0F, rgb: 0xADADAD }
+        };
+        
+        for(var name in COLORS)
+            COLORS[COLORS[name].n] = COLORS[name];
+    }
+        
+    Caves.prototype = 
+    {
+        DIR: { UP: 0, UPRIGHT: 1, RIGHT: 2, DOWNRIGHT: 3, DOWN: 4, DOWNLEFT: 5, LEFT: 6, UPLEFT: 7 },
+        
+        SPACE:      0x00, 
+        DIRT:       0x01, 
+        BRICK:      0x02, 
+        MAGIC     : 0x03, 
+        STEEL     : 0x07, 
+        FIREFLY   : 0x08, 
+        BOULDER   : 0x10, 
+        DIAMOND   : 0x14, 
+        BUTTERFLY : 0x30, 
+        ROCKFORD  : 0x38, 
+        AMOEBA    : 0x3A, 
+        
+        decodeCave: function(cave, index) 
+        {
+            var n, x, y, seeds, object, kind, prob, index = cave.index;
+            
+            var result = 
+            {
+                index:                index, //TODO: make sure nr of cave could be use if availavble
+                name:                 cave.name,
+                description:          cave.description,
+                width:                cave.width || cave.map[0].length,
+                height:               cave.height || cave.map.length, 
+                magicWallMillingTime: cave.magicWallMillingTime || 3,
+                amoebaSlowGrowthTime: cave.amoebaSlowGrowthTime || 3,
+                initialDiamondValue:  cave.initialDiamondValue || 15,
+                extraDiamondValue:    cave.extraDiamondValue || 20,
+                diamondsNeeded:       cave.diamondsNeeded,
+                caveTime:             cave.time,
+                color1:               cave.color1,
+                color2:               cave.color2,
+                amoebaMaxSize:        cave.amoebaMaxSize,
+                mapType:              cave.mapType,
+                map:                  [ ]
+            };
+        
+            for(y = 0 ; y < result.height ; ++y)
+                for (x = 0 ; x < result.width ; ++x)
+                {
+                    let objectCode = cave.map[y][x];
+                    let object;
+        
+                    switch(objectCode)
+                    {
+                        case 1:  object = 0x25; break;
+                        case 2:  object = 0x04; break;
+                        case 3:  object = 0x00; break;
+                        case 4: 
+                        case 5: 
+                        case 6:
+                                object = 0x01; break;
+                        case 7:
+                        case 8: 
+                        case 9:
+                                object = 0x02; break;
+                        case 10:
+                        case 11:
+                        case 12:
+                        case 13:
+                        case 14:
+                        case 15: 
+                                object = 0x10; break;
+                        case 16:
+                        case 17:
+                        case 18:
+                        case 19:
+                        case 20: object = 0x14; break;
+                        case 21:
+                        case 22:
+                        case 23:
+                        case 24: object = 0x30; break;
+                        case 25:
+                        case 26:
+                        case 27:
+                        case 28: object = 0x08; break;
+        
+                        default: object = 0x00; break;
+                    }
+        
+                    this.drawSingleObject(result, object, x, y);
+                }
+        
+            this.drawRect(result, this.STEEL, 0, 0, result.width, result.height);
+        
+            return result;
+        },
+        
+        drawSingleObject: function(result, object, x, y) 
+        {
+            result.map[x]    = result.map[x] || [];
+            result.map[x][y] = object;
+        },
+        
+        drawLine: function(result, object, x, y, length, dir) 
+        {
+            var dx = [ 0,  1, 1, 1, 0, -1, -1, -1 ][dir],
+                dy = [-1, -1, 0, 1, 1,  1,  0, -1 ][dir];
+            
+            for(var n = 0 ; n < length ; n++)
+            {
+                this.drawSingleObject(result, object, x, y);
+                x += dx;
+                y += dy;
+            }
+        },
+        
+        drawFilledRect: function(result, object, x, y, width, height, fill) 
+        {
+            this.drawRect(result, object, x, y, width, height);
+            var minx = x + 1, maxx = x + width  - 1,
+                miny = y + 1, maxy = y + height - 1;
+            
+            for(x = minx ; x < maxx ; x++)
+                for(y = miny ; y < maxy ; y++)
+                    this.drawSingleObject(result, fill, x, y);
+        },
+        
+        drawRect: function(result, object, x, y, width, height) 
+        {
+            this.drawLine(result, object, x,         y,          width,   this.DIR.RIGHT);
+            this.drawLine(result, object, x,         y+height-1, width,   this.DIR.RIGHT);
+            this.drawLine(result, object, x,         y,          height,  this.DIR.DOWN);
+            this.drawLine(result, object, x+width-1, y,          height,  this.DIR.DOWN);
+        },
+        
+        loadMaps: function(mapList)
+        {
+        
+            for(var i = 0 ; i < mapList.length ; i++)
+            {
+                this.caveList = this.caveList || [];
+                let map = mapList[i];
+        
+                if(map.mapType === Util.MAPTYPE.BD)
+                    this.caveList.push(this.decodeCave(map, i));
+            }
+        }     
+    }
+
+    var Caves = new Caves();
+
+    return {
+        Caves: Caves
+    };
+
+})();
+
+function game()
+{
+
+    //window.onkeyup = keyUpHandler; // TODO: get from utils
     gameCanv = document.getElementById('GameCanvas');
     canvholder = document.getElementById('GameCanvasHolder');
 
@@ -41,12 +701,10 @@ function game(){
 
     scoreLabel = document.getElementById('scoreLabel');
     diamondsLabel = document.getElementById('diamondsLabel');
-    timerLabel = document.getElementById('timerLabel');
+    timeLabel = document.getElementById('timerLabel');
 
-    Caves = new Caves();
-
-    registerPubEvent('mapsloaded', bdMapsLoaded, Caves);
-    canvas = document.getElementById("gameCanvas");
+    Util.registerPubEvent('mapsLoaded', bdMapsLoaded, Cave.Caves);
+    canvas = document.getElementById("GameCanvas");
 
     //TODO: set width and high of canvas
 
@@ -56,22 +714,22 @@ function game(){
 
         document.addEventListener('contextmenu', function(event) 
         {
-            if(clickInsideElement(event, 'gameCanvas'))
+            if(Util.clickInsideElement(event, 'GameCanvas'))
             {
                 event.preventDefault();
-                toggleContextMenuOn(contextmenu);
-                positionContextMenu(event);
+                Util.toggleContextMenuOn(contextmenu);
+                Util.positionContextMenu(event);
             }
             else
             {
-                toggleContextMenuOff(contextmenu);
+                Util.toggleContextMenuOff(contextmenu);
             }
         }, false);
 
         tileSize = ctx.canvas.clientWidth / 40;
     }
 
-    loadMaps();
+    AJAX.loadMaps();
 
     draw();
     loadAssets();
@@ -90,8 +748,8 @@ if (!window.requestAnimationFrame) {
 function bdMapsLoaded()
 {
     mapsLoaded = 1;
-    //Caves.loadMaps(maps);
-    //Boulderdash();
+    Cave.Caves.loadMaps(maps);
+    BoulderDash();
 }
 
 // Load all pictures from themes into themes
@@ -102,17 +760,17 @@ function loadAssets(){
     for ( i = 1; i <= max; i++ ){
         finished++;
         var img = new Image();
-        img.src = themes[i];
         img.addEventListener('load', function(){
             finished--;
-        })
+        });
+        img.src = themes[i];
         themes[i] = img;
     }
     
     // Wait until all themes are completly loaded
     var checkFinished  = function(){
         if (finished == 0 && mapsLoaded === 1){
-            currentScreen = 1;
+            currentScreen = 2; // TODO: change back to 1 for menu
         }
         else setTimeout(checkFinished, 500);
     }
@@ -149,9 +807,9 @@ function openMapSelection(event) {
         }
     
     
-        drawMap(ctx, cMap, false);
+        Util.drawMap(ctx, cMap, false);
     
-        closeModal(ev);
+        Util.closeModal(ev);
     
         return true;
     };
@@ -190,14 +848,18 @@ function onResize(){
     draw();
 }
 
-function drawLoading(){
-    ctx.background = "#000000";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.font = '19pt Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseLine = 'middle';
-    ctx.fillStyle = 'yellow';
-    ctx.fillText('BoulderSmash', canvas.width/2, canvas.height/2);
+function drawLoading()
+{
+    if(ctx)
+    {
+        ctx.background = "#000000";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.font = '19pt Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseLine = 'middle';
+        ctx.fillStyle = 'yellow';
+        ctx.fillText('BoulderSmash', canvas.width/2, canvas.height/2);
+    }
 }
 
 function drawMenu(){
@@ -238,42 +900,42 @@ BoulderDash = function()
         DIRT:              { code: 0x01, rounded: false, explodable: false, consumable: true,  sprite: { x: 1, y: 7                 } },
         BRICKWALL:         { code: 0x02, rounded: true,  explodable: false, consumable: true,  sprite: { x: 3, y: 6                 } },
         MAGICWALL:         { code: 0x03, rounded: false, explodable: false, consumable: true,  sprite: { x: 4, y: 6,  f: 4, FPS: 20 } },
-        PREOUTBOX:         { code: 0x04, update: 'this.updatePreOutbox(cell.p);', rounded: false, explodable: false, consumable: false, sprite: { x: 1, y: 6                 } },
+        PREOUTBOX:         { code: 0x04, update: function(obj, cell) { obj.updatePreOutbox(cell.p); }, rounded: false, explodable: false, consumable: false, sprite: { x: 1, y: 6                 } },
         OUTBOX:            { code: 0x05, rounded: false, explodable: false, consumable: false, sprite: { x: 1, y: 6,  f: 2, FPS: 4  } },
         STEELWALL:         { code: 0x07, rounded: false, explodable: false, consumable: false, sprite: { x: 1, y: 6                 } },
-        FIREFLY1:          { code: 0x08, update: 'this.updateFirefly(cell.p, DIR.LEFT);', rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 9,  f: 8, FPS: 20 } },
-        FIREFLY2:          { code: 0x09, update: 'this.updateFirefly(cell.p, DIR.UP);', rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 9,  f: 8, FPS: 20 } },
-        FIREFLY3:          { code: 0x0A, update: 'this.updateFirefly(cell.p, DIR.RIGHT);', rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 9,  f: 8, FPS: 20 } },
-        FIREFLY4:          { code: 0x0B, update: 'this.updateFirefly(cell.p, DIR.DOWN);', rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 9,  f: 8, FPS: 20 } },
-        BOULDER:           { code: 0x10, update: 'this.updateBoulder(cell.p);', rounded: true,  explodable: false, consumable: true,  sprite: { x: 0, y: 7                 } },
-        BOULDERFALLING:    { code: 0x12, update: 'this.updateBoulderFalling(cell.p);', rounded: false, explodable: false, consumable: true,  sprite: { x: 0, y: 7                 } },
-        DIAMOND:           { code: 0x14, update: 'this.updateDiamond(cell.p);', rounded: true,  explodable: false, consumable: true,  sprite: { x: 0, y: 10, f: 8, FPS: 20 } },
-        DIAMONDFALLING:    { code: 0x16, update: 'this.updateDiamondFalling(cell.p);', rounded: false, explodable: false, consumable: true,  sprite: { x: 0, y: 10, f: 8, FPS: 20 } },
-        EXPLODETOSPACE0:   { code: 0x1B, update: 'this.updateExplodeToSpace(cell.p, 0);', rounded: false, explodable: false, consumable: false, sprite: { x: 3, y: 7                 } },
-        EXPLODETOSPACE1:   { code: 0x1C, update: 'this.updateExplodeToSpace(cell.p, 1);', rounded: false, explodable: false, consumable: false, sprite: { x: 4, y: 7                 } },
-        EXPLODETOSPACE2:   { code: 0x1D, update: 'this.updateExplodeToSpace(cell.p, 2);', rounded: false, explodable: false, consumable: false, sprite: { x: 5, y: 7                 } },
-        EXPLODETOSPACE3:   { code: 0x1E, update: 'this.updateExplodeToSpace(cell.p, 3);', rounded: false, explodable: false, consumable: false, sprite: { x: 4, y: 7                 } },
-        EXPLODETOSPACE4:   { code: 0x1F, update: 'this.updateExplodeToSpace(cell.p, 4);', rounded: false, explodable: false, consumable: false, sprite: { x: 3, y: 7                 } },
-        EXPLODETODIAMOND0: { code: 0x20, update: 'this.updateExplodeToDiamond(cell.p, 0);', rounded: false, explodable: false, consumable: false, sprite: { x: 3, y: 7                 } },
-        EXPLODETODIAMOND1: { code: 0x21, update: 'this.updateExplodeToDiamond(cell.p, 1);', rounded: false, explodable: false, consumable: false, sprite: { x: 4, y: 7                 } },
-        EXPLODETODIAMOND2: { code: 0x22, update: 'this.updateExplodeToDiamond(cell.p, 2);', rounded: false, explodable: false, consumable: false, sprite: { x: 5, y: 7                 } },
-        EXPLODETODIAMOND3: { code: 0x23, update: 'this.updateExplodeToDiamond(cell.p, 3);', rounded: false, explodable: false, consumable: false, sprite: { x: 4, y: 7                 } },
-        EXPLODETODIAMOND4: { code: 0x24, update: 'this.updateExplodeToDiamond(cell.p, 4);', rounded: false, explodable: false, consumable: false, sprite: { x: 3, y: 7                 } },
-        PREROCKFORD1:      { code: 0x25, update: 'this.updatePreRockford(cell.p, 1);', rounded: false, explodable: false, consumable: false, sprite: { x: 1, y: 6,  f: 2, FPS: 4  } },
-        PREROCKFORD2:      { code: 0x26, update: 'this.updatePreRockford(cell.p, 2);', rounded: false, explodable: false, consumable: false, sprite: { x: 1, y: 0                 } },
-        PREROCKFORD3:      { code: 0x27, update: 'this.updatePreRockford(cell.p, 3);', rounded: false, explodable: false, consumable: false, sprite: { x: 2, y: 0                 } },
-        PREROCKFORD4:      { code: 0x28, update: 'this.updatePreRockford(cell.p, 4);', rounded: false, explodable: false, consumable: false, sprite: { x: 3, y: 0                 } },
-        BUTTERFLY1:        { code: 0x30, update: 'this.updateButterfly(cell.p, DIR.LEFT);', rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 11, f: 8, FPS: 20 } },
-        BUTTERFLY2:        { code: 0x31, update: 'this.updateButterfly(cell.p, DIR.UP);', rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 11, f: 8, FPS: 20 } },
-        BUTTERFLY3:        { code: 0x32, update: 'this.updateButterfly(cell.p, DIR.RIGHT);', rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 11, f: 8, FPS: 20 } },
-        BUTTERFLY4:        { code: 0x33, update: 'this.updateButterfly(cell.p, DIR.DOWN);', rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 11, f: 8, FPS: 20 } },
-        ROCKFORD:          { code: 0x38, update: 'this.updateRockford(cell.p, moving.dir);', rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 0                 },   // standing still
+        FIREFLY1:          { code: 0x08, update: function(obj, cell) { obj.updateFirefly(cell.p, DIR.LEFT); }, rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 9,  f: 8, FPS: 20 } },
+        FIREFLY2:          { code: 0x09, update: function(obj, cell) { obj.updateFirefly(cell.p, DIR.UP); }, rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 9,  f: 8, FPS: 20 } },
+        FIREFLY3:          { code: 0x0A, update: function(obj, cell) { obj.updateFirefly(cell.p, DIR.RIGHT); }, rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 9,  f: 8, FPS: 20 } },
+        FIREFLY4:          { code: 0x0B, update: function(obj, cell) { obj.updateFirefly(cell.p, DIR.DOWN); }, rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 9,  f: 8, FPS: 20 } },
+        BOULDER:           { code: 0x10, update: function(obj, cell) { obj.updateBoulder(cell.p); }, rounded: true,  explodable: false, consumable: true,  sprite: { x: 0, y: 7                 } },
+        BOULDERFALLING:    { code: 0x12, update: function(obj, cell) { obj.updateBoulderFalling(cell.p); }, rounded: false, explodable: false, consumable: true,  sprite: { x: 0, y: 7                 } },
+        DIAMOND:           { code: 0x14, update: function(obj, cell) { obj.updateDiamond(cell.p); }, rounded: true,  explodable: false, consumable: true,  sprite: { x: 0, y: 10, f: 8, FPS: 20 } },
+        DIAMONDFALLING:    { code: 0x16, update: function(obj, cell) { obj.updateDiamondFalling(cell.p); }, rounded: false, explodable: false, consumable: true,  sprite: { x: 0, y: 10, f: 8, FPS: 20 } },
+        EXPLODETOSPACE0:   { code: 0x1B, update: function(obj, cell) { obj.updateExplodeToSpace(cell.p, 0); }, rounded: false, explodable: false, consumable: false, sprite: { x: 3, y: 7                 } },
+        EXPLODETOSPACE1:   { code: 0x1C, update: function(obj, cell) { obj.updateExplodeToSpace(cell.p, 1); }, rounded: false, explodable: false, consumable: false, sprite: { x: 4, y: 7                 } },
+        EXPLODETOSPACE2:   { code: 0x1D, update: function(obj, cell) { obj.updateExplodeToSpace(cell.p, 2); }, rounded: false, explodable: false, consumable: false, sprite: { x: 5, y: 7                 } },
+        EXPLODETOSPACE3:   { code: 0x1E, update: function(obj, cell) { obj.updateExplodeToSpace(cell.p, 3); }, rounded: false, explodable: false, consumable: false, sprite: { x: 4, y: 7                 } },
+        EXPLODETOSPACE4:   { code: 0x1F, update: function(obj, cell) { obj.updateExplodeToSpace(cell.p, 4); }, rounded: false, explodable: false, consumable: false, sprite: { x: 3, y: 7                 } },
+        EXPLODETODIAMOND0: { code: 0x20, update: function(obj, cell) { obj.updateExplodeToDiamond(cell.p, 0); }, rounded: false, explodable: false, consumable: false, sprite: { x: 3, y: 7                 } },
+        EXPLODETODIAMOND1: { code: 0x21, update: function(obj, cell) { obj.updateExplodeToDiamond(cell.p, 1); }, rounded: false, explodable: false, consumable: false, sprite: { x: 4, y: 7                 } },
+        EXPLODETODIAMOND2: { code: 0x22, update: function(obj, cell) { obj.updateExplodeToDiamond(cell.p, 2); }, rounded: false, explodable: false, consumable: false, sprite: { x: 5, y: 7                 } },
+        EXPLODETODIAMOND3: { code: 0x23, update: function(obj, cell) { obj.updateExplodeToDiamond(cell.p, 3); }, rounded: false, explodable: false, consumable: false, sprite: { x: 4, y: 7                 } },
+        EXPLODETODIAMOND4: { code: 0x24, update: function(obj, cell) { obj.updateExplodeToDiamond(cell.p, 4); }, rounded: false, explodable: false, consumable: false, sprite: { x: 3, y: 7                 } },
+        PREROCKFORD1:      { code: 0x25, update: function(obj, cell) { obj.updateRockford(cell.p, 1); }, rounded: false, explodable: false, consumable: false, sprite: { x: 1, y: 6,  f: 2, FPS: 4  } },
+        PREROCKFORD2:      { code: 0x26, update: function(obj, cell) { obj.updateRockford(cell.p, 2); }, rounded: false, explodable: false, consumable: false, sprite: { x: 1, y: 0                 } },
+        PREROCKFORD3:      { code: 0x27, update: function(obj, cell) { obj.updateRockford(cell.p, 3); }, rounded: false, explodable: false, consumable: false, sprite: { x: 2, y: 0                 } },
+        PREROCKFORD4:      { code: 0x28, update: function(obj, cell) { obj.updateRockford(cell.p, 4); }, rounded: false, explodable: false, consumable: false, sprite: { x: 3, y: 0                 } },
+        BUTTERFLY1:        { code: 0x30, update: function(obj, cell) { obj.updateButterfly(cell.p, DIR.LEFT); }, rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 11, f: 8, FPS: 20 } },
+        BUTTERFLY2:        { code: 0x31, update: function(obj, cell) { obj.updateButterfly(cell.p, DIR.UP); }, rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 11, f: 8, FPS: 20 } },
+        BUTTERFLY3:        { code: 0x32, update: function(obj, cell) { obj.updateButterfly(cell.p, DIR.RIGHT); }, rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 11, f: 8, FPS: 20 } },
+        BUTTERFLY4:        { code: 0x33, update: function(obj, cell) { obj.updateButterfly(cell.p, DIR.DOWN); }, rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 11, f: 8, FPS: 20 } },
+        ROCKFORD:          { code: 0x38, update: function(obj, cell) { obj.updateRockford(cell.p, moving.dir); }, rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 0                 },   // standing
                                                                                                  left: { x: 0, y: 4,  f: 8, FPS: 20 },   // left
                                                                                                 right: { x: 0, y: 5,  f: 8, FPS: 20 },   // right
                                                                                                 blink: { x: 0, y: 1,  f: 8, FPS: 20 },   // blinking
                                                                                                   tap: { x: 0, y: 2,  f: 8, FPS: 20 },   // tapping
                                                                                              blinktap: { x: 0, y: 3,  f: 8, FPS: 20 } }, // tapping and blinking
-        AMOEBA:            { code: 0x3A, update: 'this.updateAmoeba(cell.p);', rounded: false, explodable: false, consumable: true,  sprite: { x: 0, y: 8,  f: 8, FPS: 20 } }
+        AMOEBA:            { code: 0x3A, update: function(obj, cell) { obj.updateAmoeba(cell.p); }, rounded: false, explodable: false, consumable: true,  sprite: { x: 0, y: 8,  f: 8, FPS: 20 } }
       };
     
       for(var key in OBJECT) {
@@ -319,6 +981,15 @@ BoulderDash = function()
         OBJECT.DIAMOND
       ];
 
+      function isFirefly(o)   { return (OBJECT.FIREFLY1.code     <= o.code) && (o.code <= OBJECT.FIREFLY4.code);   }
+      function isButterfly(o) { return (OBJECT.BUTTERFLY1.code   <= o.code) && (o.code <= OBJECT.BUTTERFLY4.code); }
+
+    var Point = function(x, y, dir) 
+    {
+        this.x = x + (DIRX[dir] || 0);
+        this.y = y + (DIRY[dir] || 0);
+    };
+
     var GameObject = function()
     {
         this.storage = window.localStorage || {};
@@ -329,6 +1000,7 @@ BoulderDash = function()
     {
         init: function(cave)
         {
+            this.index    = cave.index || 0;
             this.cave     = cave;           
             this.width    = this.cave.width;               
             this.height   = this.cave.height;              
@@ -365,10 +1037,10 @@ BoulderDash = function()
             this.triggerEvent('level', this.cave);
         },
 
-        nextLevel: function() { /*TODO: get next map */ this.init(cave); },
+        nextLevel: function() { if((Cave.Caves.caveList.length - 1) >= this.index + 1)this.init(Cave.Caves.caveList[this.index + 1]); },
 
-        get:          function(p,dir)   {     return this.cells[p.x + (DIRX[dir] || 0)][p.y + (DIRY[dir] || 0)].object; },
-        set:          function(p,o,dir) { var cell = this.cells[p.x + (DIRX[dir] || 0)][p.y + (DIRY[dir] || 0)]; cell.object = o; cell.frame = this.frame; this.triggerEvent('cell', cell) },
+        get:          function(p,dir)   {     return this.tiles[p.x + (DIRX[dir] || 0)][p.y + (DIRY[dir] || 0)].object; },
+        set:          function(p,o,dir) { var cell = this.tiles[p.x + (DIRX[dir] || 0)][p.y + (DIRY[dir] || 0)]; cell.object = o; cell.frame = this.frameCounter; this.triggerEvent('cell', cell) },
         clear:        function(p,dir)   { this.set(p,OBJECT.SPACE,dir); },
         move:         function(p,dir,o) { this.clear(p); this.set(p,o,dir); },
         isObjectSpace:      function(p,dir)   { var o = this.get(p,dir); return OBJECT.SPACE     === o; },
@@ -378,6 +1050,7 @@ BoulderDash = function()
         isObjectFallingDiamond: function(p,dir) { var o = this.get(p,dir); return OBJECT.DIAMONDFALLING === o; },
         isObjectBoulder:    function(p,dir)   { var o = this.get(p,dir); return OBJECT.BOULDER   === o; },
         isObjectFallingBoulder: function(p,dir) { var o = this.get(p,dir); return OBJECT.BOULDERFALLING === o; },
+        isObjectMagic:      function(p,dir)   { var o = this.get(p,dir); return OBJECT.MAGICWALL === o; },
         isObjectOutbox:     function(p,dir)   { var o = this.get(p,dir); return OBJECT.OUTBOX    === o; },
         isObjectFirefly:    function(p,dir)   { var o = this.get(p,dir); return isFirefly(o);           },
         isObjectButterfly:  function(p,dir)   { var o = this.get(p,dir); return isButterfly(o);         },
@@ -386,11 +1059,11 @@ BoulderDash = function()
         isObjectExplodable: function(p,dir)   { var o = this.get(p,dir); return o.explodable;           },
         isObjectConsumable: function(p,dir)   { var o = this.get(p,dir); return o.consumable;           },
 
-        eachCell: function(callback, thisArg) 
+        foreachTile: function(callback, thisArg) 
         {
             for(var y = 0 ; y < this.height ; y++) {
               for(var x = 0 ; x < this.width ; x++) {
-                callback.call(thisArg || this, this.cells[x][y]);
+                callback.call(thisArg || this, this.tiles[x][y]);
               }
             }
         },
@@ -398,37 +1071,37 @@ BoulderDash = function()
         update: function() 
         {
             this.beginFrame();
-            this.eachCell(
+            this.foreachTile(
             function(cell) 
             {
-              if (cell.frame < this.frame) 
+              if (cell.frame < this.frameCounter) 
               {
                 if(cell.object.update)
-                  eval(cell.object.update);
+                  cell.object.update(this, cell);
               }
             });
             this.endFrame();
         },
 
-        decreaseTimer: function(n) 
+        decreaseTime: function(n) 
         {
-            this.timer = Math.max(0, this.timer - (n || 1));
-            this.triggerEvent('timer', this.timer);
-            return (this.timer === 0);
+            this.time = Math.max(0, this.time - (n || 1));
+            this.triggerEvent('time', this.time);
+            return (this.time === 0);
         },
 
-        autoDecreaseTimer: function() 
+        autoDecreaseTime: function() 
         {
-            if ((this.frame > this.birth) && ((this.frame % this.FPS) == 0))
-            this.decreaseTimer(1);
+            if ((this.frameCounter > this.birth) && ((this.frameCounter % this.FPS) == 0))
+            this.decreaseTime(1);
         },
 
-        runOutTimer: function() 
+        runOutTime: function() 
         {
-            var amount = Math.min(3, this.timer);
+            var amount = Math.min(3, this.time);
             this.increaseScore(amount);
-            if (this.decreaseTimer(amount))
-                this.next();
+            if (this.decreaseTime(amount))
+                this.nextLevel();
         },
 
         collectDiamond: function() 
@@ -447,16 +1120,16 @@ BoulderDash = function()
         flashWhenEnoughDiamondsCollected: function() 
         {
             if (!this.flash && (this.diamonds.collected >= this.diamonds.needed))
-                this.flash = this.frame + Math.round(this.FPS/5); // flash for 1/5th of a second 
+                this.flash = this.frameCounter + Math.round(this.FPS/5); // flash for 1/5th of a second 
       
-            if (this.frame <= this.flash)
+            if (this.frameCounter <= this.flash)
                 this.triggerEvent('flash');
         },
 
         loseLevel: function() 
         {
             //TODO: show loosing screen with highscore card
-            this.init();
+            this.init(Cave.Caves.caveList[this.index]);
         },
 
         winLevel: function() 
@@ -466,7 +1139,7 @@ BoulderDash = function()
 
         beginFrame: function() 
         {
-            this.frame++;
+            this.frameCounter++;
             this.amoeba.size     = 0;
             this.amoeba.enclosed = true;
             this.idle = moving.dir ? {} : 
@@ -492,16 +1165,16 @@ BoulderDash = function()
             this.flashWhenEnoughDiamondsCollected();
       
             if (this.won)
-                this.runOutTimer();
-            else if (this.frame - this.foundRockford > (4 * this.FPS))
+                this.runOutTime();
+            else if (this.frameCounter - this.foundRockford > (4 * this.FPS))
                 this.loseLevel();
             else
-                this.autoDecreaseTimer();
+                this.autoDecreaseTime();
         },
 
         updatePreRockford: function(point, numb) 
         {
-            if (this.frame >= this.birth)
+            if (this.frameCounter >= this.birth)
                 this.set(point, PREROCKFORDS[numb+1]);
         },
 
@@ -513,46 +1186,46 @@ BoulderDash = function()
 
         updateRockford: function(point, direction) 
         {
-            this.foundRockford = this.frame;
+            this.foundRockford = this.frameCounter;
       
             if (this.won) 
             {
                 //TODO: display waitscreen for next stage
             }
-            else if (this.timer === 0) 
+            else if (this.time === 0) 
             {
                 this.explode(point);
             }
             else if (moving.grab) 
             {
-                if (this.isdirt(point, direction)) 
+                if (this.isObjectDirt(point, direction)) 
                 {
                     this.clear(point, direction);
                 }
-                else if (this.isdiamond(point,direction) || this.isfallingdiamond(point, direction)) 
+                else if (this.isObjectDiamond(point,direction) || this.isObjectFallingDiamond(point, direction)) 
                 {
                     this.clear(point, direction);
                     this.collectDiamond();
                 }
-                else if (horizontal(direction) && this.isboulder(point, direction)) 
+                else if (horizontal(direction) && this.isObjectBoulder(point, direction)) 
                 {
                     this.push(point, direction);
                 }
             }
-            else if (this.isempty(point, direction) || this.isdirt(point, direction)) 
+            else if (this.isObjectSpace(point, direction) || this.isObjectDirt(point, direction)) 
             {
                 this.move(point, direction, OBJECT.ROCKFORD);
             }
-            else if (this.isdiamond(point, direction)) 
+            else if (this.isObjectDiamond(point, direction)) 
             {
                 this.move(point, direction, OBJECT.ROCKFORD);
                 this.collectDiamond();
             }
-            else if (horizontal(direction) && this.isboulder(point, direction)) 
+            else if (horizontal(direction) && this.isObjectBoulder(point, direction)) 
             {
                 this.push(point, direction);
             }
-            else if (this.isoutbox(point, direction)) 
+            else if (this.isObjectOutbox(point, direction)) 
             {
                 this.move(point, direction, OBJECT.ROCKFORD);
                 this.winLevel();
@@ -561,25 +1234,25 @@ BoulderDash = function()
 
         updateBoulder: function(point) 
         {
-            if (this.isempty(point, DIR.DOWN))
+            if (this.isObjectSpace(point, DIR.DOWN))
                 this.set(point, OBJECT.BOULDERFALLING);
-            else if (this.isrounded(point, DIR.DOWN) && this.isempty(point, DIR.LEFT) && this.isempty(point, DIR.DOWNLEFT))
+            else if (this.isObjectRounded(point, DIR.DOWN) && this.isObjectSpace(point, DIR.LEFT) && this.isObjectSpace(point, DIR.DOWNLEFT))
                 this.move(point, DIR.LEFT, OBJECT.BOULDERFALLING);
-            else if (this.isrounded(point, DIR.DOWN) && this.isempty(point, DIR.RIGHT) && this.isempty(point, DIR.DOWNRIGHT))
+            else if (this.isObjectRounded(point, DIR.DOWN) && this.isObjectSpace(point, DIR.RIGHT) && this.isObjectSpace(point, DIR.DOWNRIGHT))
                 this.move(point, DIR.RIGHT, OBJECT.BOULDERFALLING);
         },
 
         updateBoulderFalling: function(point) 
         {
-            if (this.isempty(point, DIR.DOWN))
+            if (this.isObjectSpace(point, DIR.DOWN))
                 this.move(point, DIR.DOWN, OBJECT.BOULDERFALLING);
-            else if (this.isexplodable(point, DIR.DOWN))
+            else if (this.isObjectExplodable(point, DIR.DOWN))
                 this.explode(point, DIR.DOWN);
-            else if (this.ismagic(point, DIR.DOWN))
+            else if (this.isObjectMagic(point, DIR.DOWN))
                 this.domagic(point, OBJECT.DIAMOND);
-            else if (this.isrounded(point, DIR.DOWN) && this.isempty(point, DIR.LEFT) && this.isempty(point, DIR.DOWNLEFT))
+            else if (this.isObjectRounded(point, DIR.DOWN) && this.isObjectSpace(point, DIR.LEFT) && this.isObjectSpace(point, DIR.DOWNLEFT))
                 this.move(point, DIR.LEFT, OBJECT.BOULDERFALLING);
-            else if (this.isrounded(point, DIR.DOWN) && this.isempty(point, DIR.RIGHT) && this.isempty(point, DIR.DOWNRIGHT))
+            else if (this.isObjectRounded(point, DIR.DOWN) && this.isObjectSpace(point, DIR.RIGHT) && this.isObjectSpace(point, DIR.DOWNRIGHT))
                 this.move(point, DIR.RIGHT, OBJECT.BOULDERFALLING);
             else
                 this.set(point, OBJECT.BOULDER);
@@ -587,28 +1260,28 @@ BoulderDash = function()
 
         updateDiamond: function(point) 
         {
-            if (this.isempty(point, DIR.DOWN))
+            if (this.isObjectSpace(point, DIR.DOWN))
                 this.set(point, OBJECT.DIAMONDFALLING);
-            else if (this.isrounded(point, DIR.DOWN) && this.isempty(point, DIR.LEFT) && this.isempty(point, DIR.DOWNLEFT))
+            else if (this.isObjectRounded(point, DIR.DOWN) && this.isObjectSpace(point, DIR.LEFT) && this.isObjectSpace(point, DIR.DOWNLEFT))
                 this.move(point, DIR.LEFT, OBJECT.DIAMONDFALLING);
-            else if (this.isrounded(point, DIR.DOWN) && this.isempty(point, DIR.RIGHT) && this.isempty(point, DIR.DOWNRIGHT))
+            else if (this.isObjectRounded(point, DIR.DOWN) && this.isObjectSpace(point, DIR.RIGHT) && this.isObjectSpace(point, DIR.DOWNRIGHT))
                 this.move(point, DIR.RIGHT, OBJECT.DIAMONDFALLING);
         },
 
         updateDiamondFalling: function(point) 
         {
-            if (this.isempty(point, DIR.DOWN))
+            if (this.isObjectSpace(point, DIR.DOWN))
                 this.move(point, DIR.DOWN, OBJECT.DIAMONDFALLING);
-            else if (this.isrockford(point, DIR.DOWN))
+            else if (this.isObjectRockford(point, DIR.DOWN))
             {
                 this.clear(point);
                 this.collectDiamond();
             }
-            else if (this.ismagic(point, DIR.DOWN))
+            else if (this.isObjectMagic(point, DIR.DOWN))
                 this.domagic(point, OBJECT.BOULDER);
-            else if (this.isrounded(point, DIR.DOWN) && this.isempty(point, DIR.LEFT) && this.isempty(point, DIR.DOWNLEFT))
+            else if (this.isObjectRounded(point, DIR.DOWN) && this.isObjectSpace(point, DIR.LEFT) && this.isObjectSpace(point, DIR.DOWNLEFT))
                 this.move(point, DIR.LEFT, OBJECT.DIAMONDFALLING);
-            else if (this.isrounded(point, DIR.DOWN) && this.isempty(point, DIR.RIGHT) && this.isempty(point, DIR.DOWNRIGHT))
+            else if (this.isObjectRounded(point, DIR.DOWN) && this.isObjectSpace(point, DIR.RIGHT) && this.isObjectSpace(point, DIR.DOWNRIGHT))
                 this.move(point, DIR.RIGHT, OBJECT.DIAMONDFALLING);
             else
                 this.set(point, OBJECT.DIAMOND);
@@ -618,13 +1291,13 @@ BoulderDash = function()
         {
             var tmpDir = rotateLeft(direction);
             
-            if (this.isrockford(point, DIR.UP) || this.isrockford(point, DIR.DOWN) || this.isrockford(point, DIR.LEFT) || this.isrockford(point, DIR.RIGHT))
+            if (this.isObjectRockford(point, DIR.UP) || this.isObjectRockford(point, DIR.DOWN) || this.isObjectRockford(point, DIR.LEFT) || this.isObjectRockford(point, DIR.RIGHT))
                 this.explode(point);
-            else if (this.isamoeba(point, DIR.UP) || this.isamoeba(point, DIR.DOWN) || this.isamoeba(point, DIR.LEFT) || this.isamoeba(point, DIR.RIGHT))
+            else if (this.isObjectAmoeba(point, DIR.UP) || this.isObjectAmoeba(point, DIR.DOWN) || this.isObjectAmoeba(point, DIR.LEFT) || this.isObjectAmoeba(point, DIR.RIGHT))
                 this.explode(point);
-            else if (this.isempty(point, tmpDir))
+            else if (this.isObjectSpace(point, tmpDir))
                 this.move(point, tmpDir, FIREFLIES[tmpDir]);
-            else if (this.isempty(point, direction))
+            else if (this.isObjectSpace(point, direction))
                 this.move(point, direction, FIREFLIES[direction]);
             else
                 this.set(point, FIREFLIES[rotateRight(direction)]);
@@ -634,13 +1307,13 @@ BoulderDash = function()
         {
             var tmpDir = rotateRight(direction);
             
-            if (this.isrockford(point, DIR.UP) || this.isrockford(point, DIR.DOWN) || this.isrockford(point, DIR.LEFT) || this.isrockford(point, DIR.RIGHT))
+            if (this.isObjectRockford(point, DIR.UP) || this.isObjectRockford(point, DIR.DOWN) || this.isObjectRockford(point, DIR.LEFT) || this.isObjectRockford(point, DIR.RIGHT))
                 this.explode(point);
-            else if (this.isamoeba(point, DIR.UP) || this.isamoeba(point, DIR.DOWN) || this.isamoeba(point, DIR.LEFT) || this.isamoeba(point, DIR.RIGHT))
+            else if (this.isObjectAmoeba(point, DIR.UP) || this.isObjectAmoeba(point, DIR.DOWN) || this.isObjectAmoeba(point, DIR.LEFT) || this.isObjectAmoeba(point, DIR.RIGHT))
                 this.explode(point);
-            else if (this.isempty(point, tmpDir))
+            else if (this.isObjectSpace(point, tmpDir))
                 this.move(point, tmpDir, BUTTERFLIES[tmpDir]);
-            else if (this.isempty(p, dir))
+            else if (this.isObjectSpace(p, dir))
                 this.move(point, direction, BUTTERFLIES[direction]);
             else
                 this.set(point, BUTTERFLIES[rotateLeft(direction)]);
@@ -666,18 +1339,18 @@ BoulderDash = function()
             {
                 this.amoeba.size++;
         
-                if (this.isempty(point, DIR.UP) || this.isempty(point, DIR.DOWN) || this.isempty(point, DIR.RIGHT) || this.isempty(point, DIR.LEFT) ||
-                        this.isdirt(point,  DIR.UP) || this.isdirt(point,  DIR.DOWN) || this.isdirt(point,  DIR.RIGHT) || this.isdirt(point,  DIR.LEFT)) 
+                if (this.isObjectSpace(point, DIR.UP) || this.isObjectSpace(point, DIR.DOWN) || this.isObjectSpace(point, DIR.RIGHT) || this.isObjectSpace(point, DIR.LEFT) ||
+                        this.isObjectDirt(point,  DIR.UP) || this.isObjectDirt(point,  DIR.DOWN) || this.isObjectDirt(point,  DIR.RIGHT) || this.isObjectDirt(point,  DIR.LEFT)) 
                 {
                     this.amoeba.enclosed = false;
                 }
         
-                if (this.frame >= this.birth) 
+                if (this.frameCounter >= this.birth) 
                 {
                     var grow = this.amoeba.slow ? (randomInt(1, 128) < 4) : (randomInt(1, 4) == 1);
                     var direction  = randomChoice([DIR.UP, DIR.DOWN, DIR.LEFT, DIR.RIGHT]);
           
-                    if (grow && (this.isdirt(point, direction) || this.isempty(point, direction)))
+                    if (grow && (this.isObjectDirt(point, direction) || this.isObjectSpace(point, direction)))
                         this.set(point, OBJECT.AMOEBA, direction);
                 }
             }
@@ -686,23 +1359,23 @@ BoulderDash = function()
         explode: function(point, direction) 
         {
             var tmpPoint        = new Point(point.x, point.y, direction);
-            var explosion = (this.isbutterfly(tmpPoint) ? OBJECT.EXPLODETODIAMOND0 : OBJECT.EXPLODETOSPACE0);
+            var explosion = (this.isObjectButterfly(tmpPoint) ? OBJECT.EXPLODETODIAMOND0 : OBJECT.EXPLODETOSPACE0);
             this.set(tmpPoint, explosion);
       
             for(direction = 0 ; direction < 8 ; direction++) 
             {
-                if (this.isexplodable(tmpPoint, direction))
+                if (this.isObjectExplodable(tmpPoint, direction))
                     this.explode(tmpPoint, direction);
-                else if (this.isconsumable(tmpPoint, direction))
+                else if (this.isObjectConsumable(tmpPoint, direction))
                     this.set(tmpPoint, explosion, direction);
             }
         },
 
         push: function(point, direction) 
         {
-            var tmpPoint = new Point(Point.x, point.y, direction);
+            var tmpPoint = new Point(point.x, point.y, direction);
       
-            if (this.isempty(tmpPoint, direction)) 
+            if (this.isObjectSpace(tmpPoint, direction)) 
             {
                 if (randomInt(1,8) == 1) 
                 {
@@ -722,7 +1395,7 @@ BoulderDash = function()
                 this.clear(point);
                 var tmpPoint = new Point(point.x, point.y + 2);
         
-                if (this.isempty(tmpPoint))
+                if (this.isObjectSpace(tmpPoint))
                     this.set(tmpPoint, toObject);
             }
         },
@@ -755,7 +1428,7 @@ BoulderDash = function()
     {
         gameObject.registerEvent('level', this.onChangeLevel,   this);
         gameObject.registerEvent('score', this.invalidateScore, this);
-        gameObject.registerEvent('timer', this.invalidateScore, this);
+        gameObject.registerEvent('time', this.invalidateScore, this);
         gameObject.registerEvent('flash', this.invalidateCave,  this);
         gameObject.registerEvent('cell',  this.invalidateCell,  this);
     }
@@ -765,12 +1438,12 @@ BoulderDash = function()
     
         init: function(sprites) 
         {
-            this.canvas     = document.getElementById('gameCanvas');
-            this.ctx        = this.canvas.getContext('2d');
+            this.canvas     = document.getElementById('GameCanvas');
+            this.ctx        = this.canvas.getContext('2d'); //TODO take global canvas
             this.sprites    = sprites;
             this.FPS        = 30;
             this.step       = 1/this.FPS;
-            this.frame      = 0;
+            this.frameCounter      = 0;
             this.ctxSprites = document.createElement('canvas').getContext('2d');
             this.ctxSprites.canvas.width  = this.sprites.width;
             this.ctxSprites.canvas.height = this.sprites.height;
@@ -795,9 +1468,9 @@ BoulderDash = function()
     
         update: function() 
         {
-            this.frame++;
+            this.frameCounter++;
             this.score();
-            game.eachCell(this.cell, this);
+            game.foreachTile(this.cell, this);
             this.validateCave();
         },
     
@@ -807,7 +1480,7 @@ BoulderDash = function()
             {    
                 scoreLabel.innerText = 'Score: ' + game.score;
                 diamondsLabel.innerText = game.diamonds.collected + ' / ' + game.diamonds.needed;
-                timerLabel.innerText = game.timer;
+                timeLabel.innerText = game.time;
                 this.validateScore();
             }
         },
@@ -821,7 +1494,7 @@ BoulderDash = function()
             {
                 if (object === OBJECT.ROCKFORD)
                     return this.rockford(cell);
-                else if ((object === OBJECT.SPACE) && (game.flash > game.frame))
+                else if ((object === OBJECT.SPACE) && (game.flash > game.frameCounter))
                     sprite = OBJECT.SPACE.flash;
                 else if ((object === OBJECT.MAGICWALL) && !game.magic.active)
                     sprite = OBJECT.BRICKWALL.sprite;
@@ -834,7 +1507,7 @@ BoulderDash = function()
         sprite: function(sprite, cell) 
         { 
             // TODO: get images another way
-            var f = sprite.f ? (Math.floor((sprite.FPS/this.FPS) * this.frame) % sprite.f) : 0;
+            var f = sprite.f ? (Math.floor((sprite.FPS/this.FPS) * this.frameCounter) % sprite.f) : 0;
             this.ctx.drawImage(this.ctxSprites.canvas, (sprite.x + f) * 32, sprite.y * 32, 32, 32, cell.p.x * this.dx, (cell.p.y) * this.dy, this.dx, this.dy);
         },
     
@@ -902,4 +1575,134 @@ BoulderDash = function()
         }
     
     }
-}
+
+    var game   = new GameObject(),       
+    render = new Render(game);  
+
+    function run() 
+    {   
+        var now, last = performance.now(), dt = 0, gdt = 0, rdt = 0;
+        
+        function frame() 
+        {
+            now = performance.now();
+            dt  = Math.min(1, (now - last) / 1000);
+            gdt = gdt + dt;
+
+            while (gdt > game.step) 
+            {
+                gdt = gdt - game.step;
+                game.update();
+            }
+        
+            rdt = rdt + dt;
+        
+            if (rdt > render.step) 
+            {
+                rdt = rdt - render.step;
+                render.update();
+            }
+
+            last = now;
+            requestAnimationFrame(frame, render.canvas);
+        }
+        
+        load(function(sprites) 
+        {
+            render.init(sprites); 
+            game.init(Cave.Caves.caveList[0]);         
+            addEvents();          
+            frame();               
+        });
+        
+    };
+        
+    function load(cb) 
+    { //TODO: rewrite for loading multiple files
+        var sprites = document.createElement('img');
+        sprites.addEventListener('load', function() { cb(sprites); } , false);
+        sprites.src = '../Images/sprites.png';
+    };
+        
+        
+    function addEvents() 
+    {
+        document.addEventListener('keydown', keydown, false);
+        document.addEventListener('keyup',   keyup,   false);
+        window.addEventListener('resize', function() { render.resize() }, false);
+    };
+        
+    function keydown(ev) 
+    {
+        var handled = false;
+        
+        switch(ev.keyCode) 
+        {
+            case KEY.W:
+            case KEY.UP:         moving.startUp();    handled = true; break;
+            case KEY.S:
+            case KEY.DOWN:       moving.startDown();  handled = true; break;
+            case KEY.A:
+            case KEY.LEFT:       moving.startLeft();  handled = true; break;
+            case KEY.D:
+            case KEY.RIGHT:      moving.startRight(); handled = true; break;
+            case KEY.ESC:        game.init(Cave.Caves.caveList[game.index || 0]);        handled = true; break; // TODO: remove if changed in init for no caveneed
+            case KEY.PAGEUP:     game.prevLevel();         handled = true; break;
+            case KEY.PAGEDOWN:   game.nextLevel();         handled = true; break;
+            case KEY.SPACE:      moving.startGrab();  handled = true; break;
+        }
+
+        if (handled)
+            ev.preventDefault();
+    }
+        
+    function keyup(ev) 
+    {
+        switch(ev.keyCode) 
+        {
+            case KEY.W:
+            case KEY.UP:    moving.stopUp();    handled = true; break;
+            case KEY.S:
+            case KEY.DOWN:  moving.stopDown();  handled = true; break;
+            case KEY.A:
+            case KEY.LEFT:  moving.stopLeft();  handled = true; break;
+            case KEY.D:
+            case KEY.RIGHT: moving.stopRight(); handled = true; break;
+            case KEY.SPACE: moving.stopGrab(); handled = true; break;
+        }
+    }
+        
+    var moving = 
+    {
+        dir:      DIR.NONE,
+        lastXDir: DIR.NONE,
+        up: false, down: false, left: false, right: false, grab: false,
+        startUp:    function() { this.up    = true; this.dir = DIR.UP;   },
+        startDown:  function() { this.down  = true; this.dir = DIR.DOWN; },
+        startLeft:  function() { this.left  = true; this.dir = DIR.LEFT;  this.lastXDir = DIR.LEFT;  },
+        startRight: function() { this.right = true; this.dir = DIR.RIGHT; this.lastXDir = DIR.RIGHT; },
+        startGrab:  function() { this.grab  = true; },
+        stopUp:     function() { this.up    = false; this.dir = (this.dir == DIR.UP)    ? this.where() : this.dir; },
+        stopDown:   function() { this.down  = false; this.dir = (this.dir == DIR.DOWN)  ? this.where() : this.dir; },
+        stopLeft:   function() { this.left  = false; this.dir = (this.dir == DIR.LEFT)  ? this.where() : this.dir; },
+        stopRight:  function() { this.right = false, this.dir = (this.dir == DIR.RIGHT) ? this.where() : this.dir; },
+        stopGrab:   function() { this.grab  = false; },
+        
+        where: function() 
+        {
+            if (this.up)
+                return DIR.UP;
+            else if (this.down)
+                return DIR.DOWN;
+            else if (this.left)
+                return DIR.LEFT;
+            else if (this.right)
+                return DIR.RIGHT;
+        }
+    }
+        
+    run.game   = game;   
+    run.render = render;
+        
+    return run;
+}();
