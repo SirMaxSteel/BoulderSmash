@@ -1,3 +1,5 @@
+var loadingScreen;
+
 var gameCanv;
 var contextmenu;
 var maps;
@@ -7,8 +9,6 @@ var selectedMapBlock;
 var map;
 
 var canvholder;
-
-var scoreLabel, diamondsLabel, timeLabel;
 
 var canvas;
 var ctx;
@@ -692,17 +692,12 @@ var Cave = (function()
 
 function game()
 {
+    // Initial screen overlay
+    loadingScreen = document.getElementById('loadingScreen');
 
     //window.onkeyup = keyUpHandler; // TODO: get from utils
     gameCanv = document.getElementById('gameCanvas');
     canvholder = document.getElementById('gameHolder');
-
-    var gamebar = document.getElementById('gamebar');
-    var gamebarStyle = window.getComputedStyle(gamebar);
-
-    scoreLabel = document.getElementById('scoreLabel');
-    diamondsLabel = document.getElementById('diamondsLabel');
-    timeLabel = document.getElementById('timerLabel');
 
     Util.registerPubEvent('mapsLoaded', bdMapsLoaded, Cave.Caves);
     canvas = document.getElementById("gameCanvas");
@@ -772,6 +767,7 @@ function loadAssets(){
     var checkFinished  = function(){
         if (finished == 0 && mapsLoaded === 1){
             currentScreen = 2; // TODO: change back to 1 for menu
+            draw();
         }
         else setTimeout(checkFinished, 500);
     }
@@ -851,16 +847,7 @@ function onResize(){
 
 function drawLoading()
 {
-    if(ctx)
-    {
-        ctx.background = "#000000";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.font = '19pt Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseLine = 'middle';
-        ctx.fillStyle = 'yellow';
-        ctx.fillText('BoulderSmash', canvas.width/2, canvas.height/2);
-    }
+    loadingScreen.style.display = 'block';
 }
 
 function drawMenu(){
@@ -868,7 +855,8 @@ function drawMenu(){
 }
 
 function drawGame(){
-    var game = new Game();
+    loadingScreen.style.display = 'none';
+    gameCanv.style.display = 'block';
 }
 
 function drawMapEditor(){
