@@ -198,3 +198,96 @@
     font-size: 2rem;
     margin: auto;
 }
+
+.modal{
+    display:none;
+    position:fixed;
+    z-index:1;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    overflow:auto;
+    margin: auto auto;
+    background-color:#ffffff;
+    background-color:rgba(0,0,0,0.4);
+    align-content:center;
+    padding-top:120px;
+}
+
+.modal-box {
+    margin: auto;
+    width: 30%;
+    border: 1px solid #888888;
+    background-color: #fefefe;
+}
+
+.modal-content {
+    text-align: center !important;
+    outline:0;
+    padding:10px 20px;
+    overflow:auto;
+}
+
+.modal-shadow {
+    box-shadow: 0 4px 10px 0 rgba(0,0,0,0.2),0 4px 20px 0 rgba(0,0,0,0.19);
+}
+
+.modalCloseBtn {
+    text-align: center;
+    cursor: pointer;
+    white-space: nowrap;
+    color: #aaaaaa;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+
+.modalInput {
+    padding: 8px;
+    display: block;
+    border: 1px solid #ccc!important;
+    width: 100%;
+    margin-bottom:16px!important;
+}
+
+form label {
+    float:left;
+    font-weight:bold;
+}
+
+form label::after {
+    float:none
+}
+
+.modalZoomIn {
+    animation: animatezoom 0.6s;
+}
+
+    @keyframes animatezoom {
+        from {
+            transform: scale(0);
+        }
+
+        to {
+            transform: scale(1);
+        }
+    }
+
+.modalCloseBtn:hover,
+.modalCloseBtn:focus {
+    color:#000000;
+    text-decoration:none;
+    cursor:pointer;
+}
+
+.modalBtn
+{
+    display:inline-block;
+    width: 25%;
+    align-content:center;
+    border:none;
+    padding:10px auto;
+    font-weight:bold;
+    font-size:18px!important;
+}
