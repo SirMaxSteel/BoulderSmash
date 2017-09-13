@@ -395,7 +395,7 @@ var AJAX = (function()
             }
         };
     
-        xmlHttp.open('GET', '../php/loadObjects.php');
+        xmlHttp.open('GET', 'php/loadObjects.php');
         xmlHttp.send();
     };
     
@@ -416,7 +416,7 @@ var AJAX = (function()
     
         if(map && map.map && map.map.length > 0 && unsavedChanges)
         {
-            xmlHttp.open('POST', '../php/saveMap.php');
+            xmlHttp.open('POST', 'php/saveMap.php');
             xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
             xmlHttp.send(JSON.stringify(map));
         }
@@ -495,7 +495,7 @@ var AJAX = (function()
             }
         };
     
-        xmlHttp.open('GET', '../php/loadMaps.php');
+        xmlHttp.open('GET', 'php/loadMaps.php');
         xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         xmlHttp.send();
     };
@@ -617,6 +617,7 @@ var Cave = (function()
                         case 26:
                         case 27:
                         case 28: object = 0x08; break;
+                        case 32: object = 0x3A; break;
         
                         default: object = 0x00; break;
                     }
@@ -693,8 +694,8 @@ function game()
 {
 
     //window.onkeyup = keyUpHandler; // TODO: get from utils
-    gameCanv = document.getElementById('GameCanvas');
-    canvholder = document.getElementById('GameCanvasHolder');
+    gameCanv = document.getElementById('gameCanvas');
+    canvholder = document.getElementById('gameHolder');
 
     var gamebar = document.getElementById('gamebar');
     var gamebarStyle = window.getComputedStyle(gamebar);
@@ -704,7 +705,7 @@ function game()
     timeLabel = document.getElementById('timerLabel');
 
     Util.registerPubEvent('mapsLoaded', bdMapsLoaded, Cave.Caves);
-    canvas = document.getElementById("GameCanvas");
+    canvas = document.getElementById("gameCanvas");
 
     //TODO: set width and high of canvas
 
@@ -714,7 +715,7 @@ function game()
 
         document.addEventListener('contextmenu', function(event) 
         {
-            if(Util.clickInsideElement(event, 'GameCanvas'))
+            if(Util.clickInsideElement(event, 'gameCanvas'))
             {
                 event.preventDefault();
                 Util.toggleContextMenuOn(contextmenu);
@@ -1438,7 +1439,7 @@ BoulderDash = function()
     
         init: function(sprites) 
         {
-            this.canvas     = document.getElementById('GameCanvas');
+            this.canvas     = document.getElementById('gameCanvas');
             this.ctx        = this.canvas.getContext('2d'); //TODO take global canvas
             this.sprites    = sprites;
             this.FPS        = 30;
