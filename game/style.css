@@ -1,43 +1,44 @@
-#gameCanvas{
-    max-width: inherit;
-    max-height: inherit;
-    margin: auto;
-}
-
 #gameHolder{
     width: 1200px;
     height: 800px;
 }
 
-.overlayScreen{
+#gameHolder #gameCanvas{
+    max-width: inherit;
+    max-height: inherit;
+    margin: auto;
+}
+
+#gameHolder .overlayScreen{
     position: relative;
     width: 100%;
     height: 100%;
     left: 0px;
     top: 0px;
 }
+
 /* -------------- */
 /* Loading Screen */
 /* -------------- */
 
-#loadingScreen{
+#gameHolder #loadingScreen{
     background-color: black;
 }
 
-#loadingTextHolder{
+#gameHolder #loadingTextHolder{
     height: 90%;
     display: flex;
     align-items: center;
 }
 
-#loadingText{
+#gameHolder #loadingText{
     margin: auto;
     color: blue;
     font-family: sans-serif;
     font-size: 5rem;
 }
 
-#gameVersion{
+#gameHolder #gameVersion{
     position: absolute;
     left: 0px;
     bottom: 0px;
@@ -45,9 +46,10 @@
     font-family: sans-serif;
     margin: .5rem
 }
+
 /* Loading spinner */
 
-#loadingSpinner {
+#gameHolder  #loadingSpinner {
     display: block!important;
     width: 2rem;
     height: 2rem;
@@ -59,7 +61,7 @@
     margin: 1.3rem;
 }
 
-#loadingSpinner .inner {
+#gameHolder  #loadingSpinner .inner {
     border-color: #FC8F12;
     position: absolute;
     box-sizing: border-box;
@@ -68,7 +70,7 @@
     border-radius: 50%;
 }
 
-.inner.one {
+#gameHolder .inner.one {
     left: 0;
     top: 0;
     animation: rotate-one 1s linear infinite;
@@ -84,7 +86,7 @@
     }
 }
 
-.inner.two {
+#gameHolder .inner.two {
     right: 0;
     top: 0;
     animation: rotate-two 1s linear infinite;
@@ -100,7 +102,7 @@
     }
 }
 
-.inner.three {
+#gameHolder .inner.three {
     right: 0;
     bottom: 0;
     animation: rotate-three 1s linear infinite;
@@ -120,6 +122,79 @@
 /* Menu Screen */
 /* ----------- */
 
-#menuScreen{
-    background-color: blue;
+#gameHolder #menuScreen{
+    background-color: #000000;
+}
+
+#gameHolder #menuText{
+    width: 100%;
+    height: 20%;
+    float: left;
+}
+
+#gameHolder .menuContainer{
+    width: calc(100% / 3);
+    height: 80%;
+    float: left;
+}
+
+/* Menu Score */
+
+#gameHolder #menuScoreText{
+    width: 100%;
+    height: 10%;
+    display: flex;
+    font-family: sans-serif;
+    color: #ffffff;
+    font-size: 2rem;
+}
+
+#gameHolder #menuScoreText span{
+    margin: auto;
+}
+
+#gameHolder #menuScoreScores{
+    width: 100%;
+    height: 80%;
+    color: #ffffff;
+    font-family: sans-serif;
+    font-size: 1.2rem;
+    padding-left: 1.5rem;
+    overflow-y: auto;
+}
+
+#gameHolder .singleScore span{
+    float: left;
+    margin-top: .2rem;
+}
+
+#gameHolder .singleScore span:nth-child(1){
+    width: 10%;
+}
+
+#gameHolder .singleScore span:nth-child(2){
+    width: 60%;
+}
+
+#gameHolder .singleScore span:nth-child(3){
+    width: 30%;
+}
+
+/* Menu Buttons */
+
+#gameHolder .menuButton{
+    width: 75%;
+    height: 10%;
+    margin: auto;
+    margin-top: 10%;
+    background: green;
+    cursor: pointer;
+    border-radius: 10px;
+    display: flex;
+}
+
+#gameHolder .menuButton span{
+    font-family: sans-serif;
+    font-size: 2rem;
+    margin: auto;
 }
