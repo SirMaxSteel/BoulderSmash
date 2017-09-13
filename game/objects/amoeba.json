@@ -1,0 +1,8 @@
+{
+  "id": "Amoeba",
+  "sprite": { "x": 0, "y": 8, "f": 8, "FPS": 20},
+  "isSticky": false,
+  "category": "Animal",
+  "canBeDestroyed": false,
+  "objectCode": 32
+}

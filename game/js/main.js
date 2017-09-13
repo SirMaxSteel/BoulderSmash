@@ -556,7 +556,7 @@ var Cave = (function()
         
         decodeCave: function(cave, index) 
         {
-            var n, x, y, seeds, object, kind, prob, index = cave.index;
+            var object;
             
             var result = 
             {
@@ -578,8 +578,8 @@ var Cave = (function()
                 map:                  [ ]
             };
         
-            for(y = 0 ; y < result.height ; ++y)
-                for (x = 0 ; x < result.width ; ++x)
+            for(var y = 0 ; y < result.height ; y++)
+                for (var x = 0 ; x < result.width ; x++)
                 {
                     let objectCode = cave.map[y][x];
                     let object;
@@ -881,7 +881,7 @@ function drawCommunity(){
 
 BoulderDash = function()
 {
-    var KEY = { ENTER: 13, ESC: 27, SPACE: 32, PAGEUP: 33, PAGEDOWN: 34, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, F: 70, W: 82, A: 65, S: 83, D: 68, E: 69, M: 77 };
+    var KEY = { ENTER: 13, ESC: 27, SPACE: 32, PAGEUP: 33, PAGEDOWN: 34, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, F: 70, W: 87, A: 65, S: 83, D: 68, E: 69, M: 77 };
 
     function random(min, max)       { return (min + (Math.random() * (max - min)));            };
     function randomInt(min, max)    { return Math.floor(random(min,max));                      };
@@ -922,10 +922,10 @@ BoulderDash = function()
         EXPLODETODIAMOND2: { code: 0x22, update: function(obj, cell) { obj.updateExplodeToDiamond(cell.p, 2); }, rounded: false, explodable: false, consumable: false, sprite: { x: 5, y: 7                 } },
         EXPLODETODIAMOND3: { code: 0x23, update: function(obj, cell) { obj.updateExplodeToDiamond(cell.p, 3); }, rounded: false, explodable: false, consumable: false, sprite: { x: 4, y: 7                 } },
         EXPLODETODIAMOND4: { code: 0x24, update: function(obj, cell) { obj.updateExplodeToDiamond(cell.p, 4); }, rounded: false, explodable: false, consumable: false, sprite: { x: 3, y: 7                 } },
-        PREROCKFORD1:      { code: 0x25, update: function(obj, cell) { obj.updateRockford(cell.p, 1); }, rounded: false, explodable: false, consumable: false, sprite: { x: 1, y: 6,  f: 2, FPS: 4  } },
-        PREROCKFORD2:      { code: 0x26, update: function(obj, cell) { obj.updateRockford(cell.p, 2); }, rounded: false, explodable: false, consumable: false, sprite: { x: 1, y: 0                 } },
-        PREROCKFORD3:      { code: 0x27, update: function(obj, cell) { obj.updateRockford(cell.p, 3); }, rounded: false, explodable: false, consumable: false, sprite: { x: 2, y: 0                 } },
-        PREROCKFORD4:      { code: 0x28, update: function(obj, cell) { obj.updateRockford(cell.p, 4); }, rounded: false, explodable: false, consumable: false, sprite: { x: 3, y: 0                 } },
+        PREROCKFORD1:      { code: 0x25, update: function(obj, cell) { obj.updatePreRockford(cell.p, 1); }, rounded: false, explodable: false, consumable: false, sprite: { x: 1, y: 6,  f: 2, FPS: 4  } },
+        PREROCKFORD2:      { code: 0x26, update: function(obj, cell) { obj.updatePreRockford(cell.p, 2); }, rounded: false, explodable: false, consumable: false, sprite: { x: 1, y: 0                 } },
+        PREROCKFORD3:      { code: 0x27, update: function(obj, cell) { obj.updatePreRockford(cell.p, 3); }, rounded: false, explodable: false, consumable: false, sprite: { x: 2, y: 0                 } },
+        PREROCKFORD4:      { code: 0x28, update: function(obj, cell) { obj.updatePreRockford(cell.p, 4); }, rounded: false, explodable: false, consumable: false, sprite: { x: 3, y: 0                 } },
         BUTTERFLY1:        { code: 0x30, update: function(obj, cell) { obj.updateButterfly(cell.p, DIR.LEFT); }, rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 11, f: 8, FPS: 20 } },
         BUTTERFLY2:        { code: 0x31, update: function(obj, cell) { obj.updateButterfly(cell.p, DIR.UP); }, rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 11, f: 8, FPS: 20 } },
         BUTTERFLY3:        { code: 0x32, update: function(obj, cell) { obj.updateButterfly(cell.p, DIR.RIGHT); }, rounded: false, explodable: true,  consumable: true,  sprite: { x: 0, y: 11, f: 8, FPS: 20 } },
@@ -1022,7 +1022,7 @@ BoulderDash = function()
             };
             this.amoeba = {
               max: this.cave.amoebaMaxSize,
-              slow: this.cave.amoebaSlowGrowthTime/this.step // time until the amoeba grows
+              slow: this.cave.amoebaSlowGrowthTime/this.step, // time until the amoeba grows
             };
             this.magic = {
               active: false,
@@ -1314,7 +1314,7 @@ BoulderDash = function()
                 this.explode(point);
             else if (this.isObjectSpace(point, tmpDir))
                 this.move(point, tmpDir, BUTTERFLIES[tmpDir]);
-            else if (this.isObjectSpace(p, dir))
+            else if (this.isObjectSpace(point, direction))
                 this.move(point, direction, BUTTERFLIES[direction]);
             else
                 this.set(point, BUTTERFLIES[rotateLeft(direction)]);
@@ -1378,7 +1378,7 @@ BoulderDash = function()
       
             if (this.isObjectSpace(tmpPoint, direction)) 
             {
-                if (randomInt(1,8) == 1) 
+                if (randomInt(1,5) == 1) 
                 {
                     this.move(tmpPoint, direction, OBJECT.BOULDER);
           
@@ -1475,7 +1475,7 @@ BoulderDash = function()
             this.validateCave();
         },
     
-        score: function() 
+        /*score: function() 
         {
             if (this.invalid.score) 
             {    
@@ -1484,7 +1484,31 @@ BoulderDash = function()
                 timeLabel.innerText = game.time;
                 this.validateScore();
             }
-        },
+        },*/
+
+        score: function() {
+            if (this.invalid.score) {
+              this.ctx.fillStyle='black';
+              this.ctx.fillRect(0, 0, this.canvas.width, tileSize);
+              this.number(3, game.diamonds.collected, 2);
+              this.letter(  5, '$');  
+              this.number(7, game.diamonds.needed, 2);
+              this.number(25, game.time);
+              this.number(31, game.score);
+              this.validateScore();
+            }
+          },
+      
+          number: function(x, num, width) {
+            let numString = num.toString();
+            var i, word = ('0000000000' + numString).slice(-(width || numString.length));
+            for(i = 0 ; i < word.length ; ++i)
+              this.letter(x+i, word[i]);
+          },
+      
+          letter: function(x, c) {
+            this.ctx.drawImage(this.ctxSprites.canvas, 9 * 32, (c.charCodeAt(0)-32) * 16, 32, 16, (x * tileSize), 0, tileSize, tileSize-4);
+          },
     
         cell: function(cell) 
         {
@@ -1509,7 +1533,7 @@ BoulderDash = function()
         { 
             // TODO: get images another way
             var f = sprite.f ? (Math.floor((sprite.FPS/this.FPS) * this.frameCounter) % sprite.f) : 0;
-            this.ctx.drawImage(this.ctxSprites.canvas, (sprite.x + f) * 32, sprite.y * 32, 32, 32, cell.p.x * this.dx, (cell.p.y) * this.dy, this.dx, this.dy);
+            this.ctx.drawImage(this.ctxSprites.canvas, (sprite.x + f) * 32, sprite.y * 32, 32, 32, cell.p.x * tileSize, (cell.p.y + 1) * tileSize, tileSize, tileSize);
         },
     
         rockford: function(cell) 
@@ -1566,11 +1590,10 @@ BoulderDash = function()
     
         resize: function() 
         {
-            var visibleArea = { w: 40, h: 22 };            
+            var visibleArea = { w: 40, h: 23 };            
             this.canvas.width  = this.canvas.clientWidth;  
             this.canvas.height = this.canvas.clientHeight; 
-            this.dx = this.canvas.width  / visibleArea.w;
-            this.dy = this.canvas.height / visibleArea.h;  
+            tileSize = this.canvas.width  / visibleArea.w;
             this.invalidateScore();
             this.invalidateCave();
         }

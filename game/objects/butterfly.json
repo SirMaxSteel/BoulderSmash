@@ -1,0 +1,7 @@
+{
+  "id": "Buttferfly",
+  "sprite": { "x": 0, "y": 11, "f": 8, "FPS": 20 },
+  "isSticky": true,
+  "category": "Animal",
+  "objectCode":24
+}
