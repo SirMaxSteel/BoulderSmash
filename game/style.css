@@ -309,7 +309,7 @@
 
 #gameHolder #pauseMenu{
     width: 20%;
-    height: 17%;
+    height: 32%;
     margin: auto;
     background-color: #000000;
     border: 1px solid #a46e2f;
@@ -345,7 +345,7 @@
 #gameHolder #pauseMenuButtons .pauseMenuButton{
     margin: auto;
     width: 80%;
-    height: 40%;
+    height: 25%;
     display: flex;
     border: 1px solid #a46e2f;
     border-radius: 10px;
