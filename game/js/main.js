@@ -1,4 +1,6 @@
 var loadingScreen;
+var menuScreen;
+var pauseScreen;
 
 var gameCanv;
 var contextmenu;
@@ -10,10 +12,11 @@ var map;
 
 var canvholder;
 
-var canvas;
 var ctx;
 var fullyLoaded = 0;
-var currentScreen = 0; // 0 = Loading; 1 = Menu; 2 = Game; 3 = MapEditor; 4 = Community;
+
+var SCREENS = { LOADING: 0, MENU: 1, GAME: 2, MAPEDITOR: 3, COMMUNITY: 4, PAUSE: 5 };
+var currentScreen = SCREENS.LOADING;
 
 var themes = {
     1: "assets/test.png",
@@ -24,6 +27,10 @@ var themes = {
 var activeTheme;
 var tileSize;
 var mapsLoaded = 0;
+
+var paused = false;
+
+var highscoreSection;
 
 
 document.addEventListener('DOMContentLoaded', game, false);
@@ -318,7 +325,7 @@ var Util = (function () {
                 ctx.textBaseline='middle';
                 ctx.textAlign='center';
                 ctx.font='24px Arial';
-                ctx.fillText('Load a map or create one.', canvas.width/2, canvas.height/2);
+                ctx.fillText('Load a map or create one.', gameCanv.width/2, gameCanv.height/2);
                 return;
             }
         
@@ -407,7 +414,6 @@ var AJAX = (function()
             if(this.readyState == 4 && this.status == 200)
             {
                 unsavedChanges = false;
-                console.log(this.responseText);
                 alert('Map saved successfully');
 
                 Util.triggerPubEvent('mapSaved');
@@ -442,7 +448,7 @@ var AJAX = (function()
                 for(var i = 0; i < loadedMaps.length; i++)
                 {   
                     var tObj = loadedMaps[i];
-    
+
                     if(!tObj.name)
                     {
                         tObj.name = 'Anonym' + tempNameCounter;
@@ -557,6 +563,7 @@ var Cave = (function()
         decodeCave: function(cave, index) 
         {
             var object;
+            var mapSizeOk = true;
             
             var result = 
             {
@@ -577,12 +584,101 @@ var Cave = (function()
                 mapType:              cave.mapType,
                 map:                  [ ]
             };
-        
+
+            var oldHeight = result.height;
+            var oldWidth = result.width;
+
+            var top = 0, left = 0;
+
+            var topLeft = cave.map[0][0];
+            var hasBorder = (topLeft == 0x09);
+
+            if(!hasBorder)
+            {
+                //shift to add border
+                for(var y = result.height - 1; y >= 0; y--)
+                {
+                    for(var x = result.width - 1; x >= 0; x--)
+                    {        
+                        cave.map[y][x + 1] = cave.map[y][x];
+                        cave.map[y][x] = undefined;
+                    }
+
+                    cave.map[y + 1] = cave.map[y];
+                    cave.map[y] = [];
+                }
+
+                oldHeight++;
+                oldWidth++;
+                result.width++;
+                result.height++;
+
+                if(result.height >= 22)
+                {
+                    cave.map[result.height] = [];
+
+                    // add bottom border
+                    oldHeight++;
+                    result.height++
+                }
+
+                if(result.width >= 40)
+                {
+                    //add right border
+                    for(var y = 0; y < result.height; y++)
+                        cave.map[y][result.width] = undefined;
+                    
+                        oldWidth++;
+                        result.width++;
+                }
+            }
+
+            if(result.height < 22)
+            {
+                top = Math.floor(11 - (result.height  / 2));
+
+                if(top > 0)
+                {
+                    for(var y = result.height -1; y >= 0; y--)
+                    {              
+                        cave.map[y + top] = cave.map[y];
+                        cave.map[y] = [];
+                    }
+                }
+
+                result.height = 22;
+                mapSizeOk = false;
+            }
+
+            if(result.width < 40)
+            {
+               left =  Math.floor(20 - (result.width  / 2));
+
+               if(left > 0)
+               {
+                    for(var y = top; y < oldHeight + top; y++)
+                    {
+                        for(var x = result.width - 1; x >= 0; x--)
+                        {        
+                            cave.map[y][x + left] = cave.map[y][x];
+                            cave.map[y][x] = undefined;
+                        }
+                    }
+                }
+                
+                result.width = 40;
+                mapSizeOk = false;
+            }
+            
             for(var y = 0 ; y < result.height ; y++)
                 for (var x = 0 ; x < result.width ; x++)
                 {
-                    let objectCode = cave.map[y][x];
+                    let col = cave.map[y];
                     let object;
+                    let objectCode
+
+                    if(col)
+                        objectCode = col[x];
         
                     switch(objectCode)
                     {
@@ -595,8 +691,9 @@ var Cave = (function()
                                 object = 0x01; break;
                         case 7:
                         case 8: 
-                        case 9:
                                 object = 0x02; break;
+                        case 9:
+                                object = 0x07; break;
                         case 10:
                         case 11:
                         case 12:
@@ -618,14 +715,13 @@ var Cave = (function()
                         case 27:
                         case 28: object = 0x08; break;
                         case 32: object = 0x3A; break;
+                        case undefined: object = 0x07; break;
         
                         default: object = 0x00; break;
                     }
         
                     this.drawSingleObject(result, object, x, y);
                 }
-        
-            this.drawRect(result, this.STEEL, 0, 0, result.width, result.height);
         
             return result;
         },
@@ -694,19 +790,23 @@ function game()
 {
     // Initial screen overlay
     loadingScreen = document.getElementById('loadingScreen');
+    menuScreen = document.getElementById('menuScreen');
+    pauseScreen = document.getElementById('pauseScreen');
+
+    highscoreSection = document.getElementById('menuScoreScores');
+    //TODO: load the scores
 
     //window.onkeyup = keyUpHandler; // TODO: get from utils
     gameCanv = document.getElementById('gameCanvas');
     canvholder = document.getElementById('gameHolder');
 
     Util.registerPubEvent('mapsLoaded', bdMapsLoaded, Cave.Caves);
-    canvas = document.getElementById("gameCanvas");
 
     //TODO: set width and high of canvas
 
-    if(canvas)
+    if(gameCanv)
     {
-        ctx = canvas.getContext("2d");
+        ctx = gameCanv.getContext("2d");
 
         document.addEventListener('contextmenu', function(event) 
         {
@@ -727,12 +827,12 @@ function game()
 
     AJAX.loadMaps();
 
-    draw();
+    drawScreen();
     loadAssets();
 }
 
 if (!window.requestAnimationFrame) { 
-    window.requestAnimationFrame = window.webkitRequestAnimationFrame || 
+        window.requestAnimationFrame = window.webkitRequestAnimationFrame || 
                                    window.mozRequestAnimationFrame    || 
                                    window.oRequestAnimationFrame      || 
                                    window.msRequestAnimationFrame     || 
@@ -744,8 +844,6 @@ if (!window.requestAnimationFrame) {
 function bdMapsLoaded()
 {
     mapsLoaded = 1;
-    Cave.Caves.loadMaps(maps);
-    BoulderDash();
 }
 
 // Load all pictures from themes into themes
@@ -766,8 +864,8 @@ function loadAssets(){
     // Wait until all themes are completly loaded
     var checkFinished  = function(){
         if (finished == 0 && mapsLoaded === 1){
-            currentScreen = 2; // TODO: change back to 1 for menu
-            draw();
+            currentScreen = SCREENS.MENU; // TODO: change back to 1 for menu
+            drawScreen();
         }
         else setTimeout(checkFinished, 500);
     }
@@ -811,38 +909,36 @@ function openMapSelection(event) {
         return true;
     };
 
-function draw(){
+function drawScreen(){
     switch(currentScreen){
-        case 0:
+        case SCREENS.LOADING:
             drawLoading();
             break;
-        case 1:
+        case SCREENS.MENU:
             drawMenu();
             break;
-        case 2:
+        case SCREENS.GAME:
             drawGame();
             break;
-        case 3:
+        case SCREENS.MAPEDITOR:
             drawMapEditor();
             break;
-        case 4:
+        case SCREENS.COMMUNITY:
             drawCommunity();
             break;
     }
 }
 
-window.addEventListener('resize', onResize, false);
-
 function onResize(){
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
-    if(canvas.width/40 <= canvas.height/24){
-        tileSize = Math.floor(canvas.width/40);
+    gameCanv.width = gameCanv.clientWidth;
+    gameCanv.height = gameCanv.clientHeight;
+    
+    if(gameCanv.width/40 <= gameCanv.height/23){
+        tileSize = Math.floor(gameCanv.width/40);
     }
     else{
-        tileSize = Math.floor(canvas.height/24);
+        tileSize = Math.floor(gameCanv.height/23);
     }
-    draw();
 }
 
 function drawLoading()
@@ -851,12 +947,26 @@ function drawLoading()
 }
 
 function drawMenu(){
-    console.log('test');
+    gameCanv.style.style = 'none';
+    menuScreen.style.display = 'block';
 }
 
 function drawGame(){
     loadingScreen.style.display = 'none';
+    menuScreen.style.display = 'none';
     gameCanv.style.display = 'block';
+
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    if(canvas.width/40 <= canvas.height/24){
+        tileSize = Math.floor(canvas.width/40);
+    }
+    else{
+        tileSize = Math.floor(canvas.height/24);
+    }
+
+    Cave.Caves.loadMaps(maps);
+    BoulderDash();
 }
 
 function drawMapEditor(){
@@ -867,9 +977,28 @@ function drawCommunity(){
     console.log('test');
 }
 
+function resume()
+{
+    pauseScreen.style.display = 'none';
+    menuScreen.style.display = 'none';
+    paused = false;
+}
+
+function gotoMenu()
+{
+
+}
+
+function play()
+{
+    currentScreen = SCREENS.GAME;
+    drawScreen();
+}
+
+
 BoulderDash = function()
 {
-    var KEY = { ENTER: 13, ESC: 27, SPACE: 32, PAGEUP: 33, PAGEDOWN: 34, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, F: 70, W: 87, A: 65, S: 83, D: 68, E: 69, M: 77 };
+    var KEY = { ENTER: 13, ESC: 27, SPACE: 32, PAGEUP: 33, PAGEDOWN: 34, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, F: 70, W: 87, A: 65, S: 83, D: 68, E: 69, M: 77, P: 80, R: 82, N: 78, B:66 };
 
     function random(min, max)       { return (min + (Math.random() * (max - min)));            };
     function randomInt(min, max)    { return Math.floor(random(min,max));                      };
@@ -1552,23 +1681,23 @@ BoulderDash = function()
                 for(x = 0 ; x < this.sprites.width ; ++x) 
                 {
                     n = (y*this.sprites.width*4) + (x*4);
-                    color = (pixels.data[n + 0] << 16) + 
+                    color = (pixels.data[n] << 16) + 
                             (pixels.data[n + 1] << 8) +
-                            (pixels.data[n + 2] << 0);
+                            (pixels.data[n + 2]);
               
                     if (color == 0x3F3F3F) 
                     { 
                         // mostly the metalic wall
-                        pixels.data[n + 0] = (color2 >> 16) & 0xFF;
+                        pixels.data[n] = (color2 >> 16) & 0xFF;
                         pixels.data[n + 1] = (color2 >> 8)  & 0xFF;
-                        pixels.data[n + 2] = (color2 >> 0)  & 0xFF;
+                        pixels.data[n + 2] = (color2)  & 0xFF;
                     }
                     else if (color == 0xA52A00) 
                     { 
                         // mostly the dirt
-                        pixels.data[n + 0] = (color1 >> 16) & 0xFF;
+                        pixels.data[n] = (color1 >> 16) & 0xFF;
                         pixels.data[n + 1] = (color1 >> 8)  & 0xFF;
-                        pixels.data[n + 2] = (color1 >> 0)  & 0xFF;
+                        pixels.data[n + 2] = (color1)  & 0xFF;
                     }
                 }
             }
@@ -1604,7 +1733,9 @@ BoulderDash = function()
             while (gdt > game.step) 
             {
                 gdt = gdt - game.step;
-                game.update();
+
+                if(!paused)
+                    game.update();
             }
         
             rdt = rdt + dt;
@@ -1612,10 +1743,13 @@ BoulderDash = function()
             if (rdt > render.step) 
             {
                 rdt = rdt - render.step;
-                render.update();
+
+                if(!paused)
+                    render.update();
             }
 
             last = now;
+            
             requestAnimationFrame(frame, render.canvas);
         }
         
@@ -1658,10 +1792,11 @@ BoulderDash = function()
             case KEY.LEFT:       moving.startLeft();  handled = true; break;
             case KEY.D:
             case KEY.RIGHT:      moving.startRight(); handled = true; break;
-            case KEY.ESC:        game.init(Cave.Caves.caveList[game.index || 0]);        handled = true; break; // TODO: remove if changed in init for no caveneed
+            case KEY.R:        game.init(Cave.Caves.caveList[game.index || 0]);        handled = true; break;
             case KEY.PAGEUP:     game.prevLevel();         handled = true; break;
             case KEY.PAGEDOWN:   game.nextLevel();         handled = true; break;
             case KEY.SPACE:      moving.startGrab();  handled = true; break;
+            case KEY.ESC:        if(paused)return; paused = true; currentScreen = SCREENS.MENU; drawScreen(); break;
         }
 
         if (handled)
@@ -1681,6 +1816,9 @@ BoulderDash = function()
             case KEY.D:
             case KEY.RIGHT: moving.stopRight(); handled = true; break;
             case KEY.SPACE: moving.stopGrab(); handled = true; break;
+            case KEY.P:     if(!paused) pauseScreen.style.display = 'block'; else pauseScreen.style.display = 'none';  paused = !paused; break;
+            case KEY.N:     game.nextLevel(); break;
+            case KEY.B:     game.previousLevel(); break; //TOOD: implement
         }
     }
         
