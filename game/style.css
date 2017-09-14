@@ -405,6 +405,9 @@
 
 #gameHolder #deathMenuAction input{
     text-align: center;
+    background-color: #000000;
+    color: #ffffff;
+    font-size: 1.2rem;
 }
 
 #gameHolder #deathMenuAction .pauseMenuAction{
@@ -423,8 +426,6 @@
     font-size: 1.2rem;
     margin: auto;
 }
-
-
 
 /*------------------*/
 /* Community Screen */
