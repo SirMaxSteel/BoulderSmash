@@ -359,6 +359,73 @@
     margin: auto;
 }
 
+/*--------------*/
+/* Death Screen */
+/*--------------*/
+
+#gameHolder #deathHolder{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    position: absolute;
+}
+
+#gameHolder #deathMenu{
+    width: 20%;
+    height: 32%;
+    margin: auto;
+    background-color: #000000;
+    border: 1px solid #a46e2f;
+    border-radius: 10px;
+}
+
+#gameHolder #deathMenuText{
+    width: 100%;
+    height: 40%;
+    display: flex;
+}
+
+#gameHolder #deathMenuText span{
+    margin: auto;
+    color: #ffffff;
+    font-family: sans-serif;
+    font-size: 2rem;
+}
+
+#gameHolder #deathMenuActionHolder{
+    width: 100%;
+    height: 60%;
+    display: flex;
+}
+
+#gameHolder #deathMenuAction{
+    width: 100%;
+    height: 100%;
+}
+
+#gameHolder #deathMenuAction input{
+    text-align: center;
+}
+
+#gameHolder #deathMenuAction .pauseMenuAction{
+    margin: auto;
+    width: 80%;
+    height: 25%;
+    display: flex;
+    border: 1px solid #a46e2f;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+#gameHolder #deathMenuAction .pauseMenuAction span{
+    color: #ffffff;
+    font-family: sans-serif;
+    font-size: 1.2rem;
+    margin: auto;
+}
+
+
+
 /*------------------*/
 /* Community Screen */
 /*------------------*/
