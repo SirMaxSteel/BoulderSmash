@@ -29,13 +29,13 @@
                         <span>Themes</span>
                     </div>
                     <div id="menuThemeSelector">
-                        <div id="ThemePrevious">
+                        <div id="ThemePrevious" onclick="prevSkin()">
                             <span>&lt;</span>
                         </div>
                         <div id="ThemeCurrent">
                             <img src="" alt="">
                         </div>
-                        <div id="ThemeNext">
+                        <div id="ThemeNext" onclick="nextTheme()">
                             <span>&gt;</span>
                         </div>
                         <div id="ThemeName">
@@ -45,15 +45,15 @@
                 </div>
                 <div id="menuButtons">
                     <div style="height: 6%;"></div>                        
-                    <div id="menuPlay" class="menuButton">
+                    <div id="menuPlay" class="menuButton" onclick="play()">
                         <span>Play</span>
                     </div>
                     <div style="height: 6%;"></div>
-                    <div id="menuCommunity" class="menuButton">
+                    <div id="menuCommunity" class="menuButton" onclick="openCommunity()">
                         <span>Community</span>
                     </div>
                     <div style="height: 6%;"></div>                    
-                    <div id="menuMapEditor" class="menuButton">
+                    <div id="menuMapEditor" class="menuButton" onclick="openMapEditor()">
                         <span>Map Editor</span>
                     </div>
                 </div>
@@ -74,8 +74,13 @@
                     </div>
                     <div id="pauseMenuButtonsHolder">
                         <div id="pauseMenuButtons">
-                            <div class="pauseMenuButton">
+                            <div class="pauseMenuButton" onclick="resume();">
                                 <span>Continue</span>
+                            </div>
+                            <div style="height: 6%;"></div>
+                            <div class="pauseMenuButton" onclick="gotoMenu()">
+                            <div class="pauseMenuButton">
+                                <Span>Toggle Sound</Span>
                             </div>
                             <div style="height: 6%;"></div>
                             <div class="pauseMenuButton">

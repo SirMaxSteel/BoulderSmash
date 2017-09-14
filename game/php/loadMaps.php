@@ -39,11 +39,19 @@ for($i = 0; $i < count($files); $i++)
         
     $fileHandle = fopen($mapFile, 'r');
     
-    $maps[] = json_decode(fread($fileHandle, filesize($mapFile)));
+    $json = fread($fileHandle, filesize($mapFile));
+    $json = utf8_encode($json);
+
+    $json = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $json);
+
+    $json = str_replace('&quot;', '"', $json);
+
+    $maps[] = json_decode($json);
+
     
     fclose($fileHandle);     
 }
- 
+
 echo json_encode($maps);
 
 ?>
