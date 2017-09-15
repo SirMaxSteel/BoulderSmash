@@ -1,0 +1,255 @@
+{
+    "themes": 
+    [
+        {
+            "name": "Pacman",
+            "prevImg": {"x":7,"y":10},
+            "sprite":"pacman.png",
+            "gameBarFont": "sans-serif",
+            "gameBarFontcolor": null,
+            "gameBarBackround": "black",
+            "gameBarFontstyle": null,
+            "size": { "width": 400, "height": 400},
+            "objects":
+            [
+                {
+                    "code": 0,
+                    "sprite": { "x": 0, "y": 0, "flash": { "x": 1, "y":0 } }
+                },
+                {
+                    "code": 1,
+                    "sprite": { "x": 7, "y": 9 }
+                },
+                {
+                    "code": 2,
+                    "isBorderSensitive": 1,
+                    "sprites": 
+                    {
+                        "topLeft": { "x": 2, "y": 9, "rotationAngle": 180},
+                        "topDown": { "x": 1, "y": 9,  "rotationAngle": 0},
+                        "topRight": { "x": 2, "y": 9, "rotationAngle": -90 },
+                        "downLeft": { "x": 2, "y": 9, "rotationAngle": 90 },
+                        "leftRight": { "x": 1, "y": 9, "rotationAngle": 90 },
+                        "downRight": { "x": 1, "y": 9, "rotationAngle": 0 },
+                        "all": { "x": 3, "y": 9, "rotationAngle": 0 },
+                        "none": { "x": 6, "y": 9, "rotationAngle": 0 },
+                        "down": { "x": 5, "y": 9, "rotationAngle": 0 },
+                        "left": { "x": 5, "y": 9, "rotationAngle": 90 },
+                        "top": { "x": 5, "y": 9, "rotationAngle": 180 },
+                        "right": { "x": 5, "y": 9, "rotationAngle": -90 },
+                        "topRightDown": { "x": 4, "y": 9, "rotationAngle": 0 },
+                        "rightDownLeft": { "x": 4, "y": 9, "rotationAngle": 90 },
+                        "downLeftTop": { "x": 4, "y": 9, "rotationAngle": 180 },
+                        "leftTopRight": { "x": 4, "y": 9, "rotationAngle": -90 }
+                    }
+                },
+                {
+                    "code": 4,
+                    "sprite": { "x": 4, "y": 10}
+                },
+                {
+                    "code": 5,
+                    "sprite": { "x": 4, "y": 10, "frames": 3, "FPS": 4}
+                },
+                {
+                    "code": 7,
+                    "isBorderSensitive": 1,
+                    "sprites": 
+                    {
+                        "topLeft": { "x": 3, "y": 0, "rotationAngle": 180},
+                        "topDown": { "x": 2, "y": 0,  "rotationAngle": 0},
+                        "topRight": { "x": 3, "y": 0, "rotationAngle": -90 },
+                        "downLeft": { "x": 3, "y": 0, "rotationAngle": 90 },
+                        "leftRight": { "x": 2, "y": 0, "rotationAngle": 90 },
+                        "downRight": { "x": 3, "y": 0, "rotationAngle": 0 },
+                        "all": { "x": 4, "y": 0, "rotationAngle": 0 },
+                        "none": { "x": 7, "y": 0, "rotationAngle": 0 },
+                        "down": { "x": 6, "y": 0, "rotationAngle": 0 },
+                        "left": { "x": 6, "y": 0, "rotationAngle": 90 },
+                        "top": { "x": 6, "y": 0, "rotationAngle": 180 },
+                        "right": { "x": 6, "y": 0, "rotationAngle": -90 },
+                        "topRightDown": { "x": 5, "y": 0, "rotationAngle": 0 },
+                        "rightDownLeft": { "x": 5, "y": 0, "rotationAngle": 90 },
+                        "downLeftTop": { "x": 5, "y": 0, "rotationAngle": 180 },
+                        "leftTopRight": { "x": 5, "y": 0, "rotationAngle": -90 }
+                    }
+                },
+                {
+                    "code": 8,
+                    "hasDirection": 1,
+                    "sprites": 
+                    { 
+                        "left": { "x": 6, "y": 6, "frames": 2, "FPS": 5 },
+                        "up": { "x": 2, "y": 6, "frames": 2, "FPS": 5 },
+                        "right": { "x": 4, "y": 6, "frames": 2, "FPS": 5 },
+                        "down": { "x": 0, "y": 6, "frames": 2, "FPS": 5 }
+                    }
+                },
+                {
+                    "code": 9,
+                    "hasDirection": 1,
+                    "sprites": 
+                    { 
+                        "left": { "x": 6, "y": 6, "frames": 2, "FPS": 5 },
+                        "up": { "x": 2, "y": 6, "frames": 2, "FPS": 5 },
+                        "right": { "x": 4, "y": 6, "frames": 2, "FPS": 5 },
+                        "down": { "x": 0, "y": 6, "frames": 2, "FPS": 5 }
+                    }
+                },
+                {
+                    "code": 10,
+                    "hasDirection": 1,
+                    "sprites": 
+                    { 
+                        "left": { "x": 6, "y": 6, "frames": 2, "FPS": 5 },
+                        "up": { "x": 2, "y": 6, "frames": 2, "FPS": 5 },
+                        "right": { "x": 4, "y": 6, "frames": 2, "FPS": 5 },
+                        "down": { "x": 0, "y": 6, "frames": 2, "FPS": 5 }
+                    }
+                },
+                {
+                    "code": 11,
+                    "hasDirection": 1,
+                    "sprites": 
+                    { 
+                        "left": { "x": 6, "y": 6, "frames": 2, "FPS": 5 },
+                        "up": { "x": 2, "y": 6, "frames": 2, "FPS": 5 },
+                        "right": { "x": 4, "y": 6, "frames": 2, "FPS": 5 },
+                        "down": { "x": 0, "y": 6, "frames": 2, "FPS": 5 }
+                    }
+                },
+                {
+                    "code": 16,
+                    "sprite": { "x": 0, "y": 9}
+                },
+                {
+                    "code": 18,
+                    "sprite": { "x": 0, "y": 9}
+                },
+                {
+                    "code": 20,
+                    "sprite": { "x": 0, "y": 8}
+                },
+                {
+                    "code": 22,
+                    "sprite": { "x": 0, "y": 8}
+                },
+                {
+                    "code": 27,
+                    "sprite": { "x": 0, "y": 10}
+                },
+                {
+                    "code": 28,
+                    "sprite": { "x": 1, "y": 10}
+                },
+                {
+                    "code": 29,
+                    "sprite": { "x": 2, "y": 10}
+                },
+                {
+                    "code": 30,
+                    "sprite": { "x": 3, "y": 10}
+                },
+                {
+                    "code": 31,
+                    "sprite": { "x": 3, "y": 10}
+                },
+                {
+                    "code": 32,
+                    "sprite": { "x": 0, "y": 10}
+                },
+                {
+                    "code": 33,
+                    "sprite": { "x": 1, "y": 10}
+                },
+                {
+                    "code": 34,
+                    "sprite": { "x": 2, "y": 10}
+                },
+                {
+                    "code": 35,
+                    "sprite": { "x": 3, "y": 10}
+                },
+                {
+                    "code": 36,
+                    "sprite": { "x": 3, "y": 10}
+                },
+                {
+                    "code": 37,
+                    "sprite": { "x": 0, "y": 1}
+                },
+                {
+                    "code": 38,
+                    "sprite": { "x": 0, "y": 1}
+                },
+                {
+                    "code": 39,
+                    "sprite": { "x": 0, "y": 1}
+                },
+                {
+                    "code": 40,
+                    "sprite": { "x": 0, "y": 1}
+                },
+                {
+                    "code": 48,
+                    "hasDirection": 1,
+                    "sprites": 
+                    { 
+                        "left": { "x": 6, "y": 7, "frames": 2, "FPS": 5 },
+                        "up": { "x": 2, "y": 7, "frames": 2, "FPS": 5 },
+                        "right": { "x": 4, "y": 7, "frames": 2, "FPS": 5 },
+                        "down": { "x": 0, "y": 7, "frames": 2, "FPS": 5 }
+                    }
+                },
+                {
+                    "code": 49,
+                    "hasDirection": 1,
+                    "sprites": 
+                    { 
+                        "left": { "x": 6, "y": 7, "frames": 2, "FPS": 5 },
+                        "up": { "x": 2, "y": 7, "frames": 2, "FPS": 5 },
+                        "right": { "x": 4, "y": 7, "frames": 2, "FPS": 5 },
+                        "down": { "x": 0, "y": 7, "frames": 2, "FPS": 5 }
+                    }
+                },
+                {
+                    "code": 50,
+                    "hasDirection": 1,
+                    "sprites": 
+                    { 
+                        "left": { "x": 6, "y": 7, "frames": 2, "FPS": 5 },
+                        "up": { "x": 2, "y": 7, "frames": 2, "FPS": 5 },
+                        "right": { "x": 4, "y": 7, "frames": 2, "FPS": 5 },
+                        "down": { "x": 0, "y": 7, "frames": 2, "FPS": 5 }
+                    }
+                },
+                {
+                    "code": 51,
+                    "hasDirection": 1,
+                    "sprites": 
+                    { 
+                        "left": { "x": 6, "y": 7, "frames": 2, "FPS": 5 },
+                        "up": { "x": 2, "y": 7, "frames": 2, "FPS": 5 },
+                        "right": { "x": 4, "y": 7, "frames": 2, "FPS": 5 },
+                        "down": { "x": 0, "y": 7, "frames": 2, "FPS": 5 }
+                    }
+                },
+                { 
+                    "code": 56,  
+                    "hasDirection":1,
+                    "sprites": 
+                    {
+                        "still": { "x": 0, "y": 1                 },
+                        "left": { "x": 0, "y": 4,  "frames": 8, "FPS": 20 },
+                        "up": { "x": 0, "y": 2, "frames": 8, "FPS": 20 },
+                        "down": { "x": 0, "y": 3, "frames": 8, "FPS": 20},  
+                        "right": { "x": 0, "y": 5,  "frames": 8, "FPS": 20 },  
+                        "blink": { "x": 0, "y": 1,  "frames": 8, "FPS": 20 },   
+                        "tap": { "x": 0, "y": 2,  "frames": 8, "FPS": 20 },   
+                        "blinktap": { "x": 0, "y": 3,  "frames": 8, "FPS": 20 } 
+                    }
+                }
+            ]
+        }
+    ]
+}

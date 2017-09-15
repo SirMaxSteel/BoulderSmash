@@ -18,19 +18,30 @@ var fullyLoaded = 0;
 var SCREENS = { LOADING: 0, MENU: 1, GAME: 2, MAPEDITOR: 3, COMMUNITY: 4, PAUSE: 5 };
 var currentScreen = SCREENS.LOADING;
 
-var themes = {
-    1: "assets/test.png",
-    2: "assets/test.png",
-    3: "assets/test.png"
-}
+var themes;
+
+var currentTheme;
 
 var activeTheme;
 var tileSize;
 var mapsLoaded = 0;
+var allThemesLoaded = 0;
 
 var paused = false;
 
 var highscoreSection;
+
+//sounds
+
+var sounds = 
+{
+    backgroundSound: 'assets/BoulderSmash.mp3',
+    boulderSound: 'assets/BoulderSmashMove.mp3',
+    explosionSound: 'assets/BoulderSmashExplosion.mp3',
+    moveSound: 'assets/BoulderSmashMove.mp3',
+    diamondSound: 'assets/BoulderSmashDiamond.mp3',
+    deathSound: 'assets/BoulderSmashDeath.mp3'
+}
 
 
 document.addEventListener('DOMContentLoaded', game, false);
@@ -405,6 +416,29 @@ var AJAX = (function()
         xmlHttp.open('GET', 'php/loadObjects.php');
         xmlHttp.send();
     };
+
+    var loadThemes = function()
+    {
+        var xmlHttp = new XMLHttpRequest();
+        
+            xmlHttp.onreadystatechange = function () {
+                if(this.readyState == 4 && this.status == 200)
+                {
+                    console.log(this.responseText);
+                    themes = JSON.parse(this.responseText);
+        
+                    if(themes.errorMsg)
+                    {
+                        alert(themes.errorMsg);
+                    }
+    
+                    Util.triggerPubEvent('themesLoaded', themes);
+                }
+            };
+        
+            xmlHttp.open('GET', 'php/loadThemes.php');
+            xmlHttp.send();
+    };
     
     var saveMap = function()
     {
@@ -509,7 +543,8 @@ var AJAX = (function()
     return {
         getObjects: getObjects,
         saveMap: saveMap,
-        loadMaps: loadMaps
+        loadMaps: loadMaps,
+        loadThemes: loadThemes
     };
     
 })();
@@ -801,12 +836,19 @@ function game()
     canvholder = document.getElementById('gameHolder');
 
     Util.registerPubEvent('mapsLoaded', bdMapsLoaded, Cave.Caves);
+    Util.registerPubEvent('themesLoaded', themesLoaded, this);
+
+
+    AJAX.loadThemes();
 
     //TODO: set width and high of canvas
 
     if(gameCanv)
     {
         ctx = gameCanv.getContext("2d");
+
+        gameCanv.clientWidth = canvholder.clientWidth;
+        gameCanv.clientHeight = canvholder.clientHeight;
 
         document.addEventListener('contextmenu', function(event) 
         {
@@ -846,24 +888,57 @@ function bdMapsLoaded()
     mapsLoaded = 1;
 }
 
+function themesLoaded(themes)
+{
+    themes = themes;
+    allThemesLoaded = 1;
+    currentTheme = themes.themes[0];
+}
+
 // Load all pictures from themes into themes
 function loadAssets(){
     var finished = 0;
     var max = 0;
-    max += Object.keys(themes).length;
-    for ( i = 1; i <= max; i++ ){
-        finished++;
-        var img = new Image();
-        img.addEventListener('load', function(){
-            finished--;
-        });
-        img.src = themes[i];
-        themes[i] = img;
+
+    /*if(themes)
+    {
+
+        max += Object.keys(themes).length;
+    
+        for ( i = 1; i <= max; i++ )
+        {
+            finished++;
+            var img = new Image();
+            img.addEventListener('load', function()
+            {
+                finished--;
+            });
+            
+            img.src = themes;
+            themes[i] = img;
+        }
+    }*/
+
+    for (var sound in sounds) 
+    {
+        if (sounds.hasOwnProperty(sound)) 
+        {
+            finished++;
+
+            var audio = document.createElement('audio');
+            audio.addEventListener('canplay', function()
+            {
+                finished--;
+            });
+
+            audio.src = sounds[sound];
+            sounds[sound] = audio;
+        }
     }
     
     // Wait until all themes are completly loaded
     var checkFinished  = function(){
-        if (finished == 0 && mapsLoaded === 1){
+        if (finished == 0 && mapsLoaded === 1 && allThemesLoaded == 1){
             currentScreen = SCREENS.MENU; // TODO: change back to 1 for menu
             drawScreen();
         }
@@ -930,8 +1005,8 @@ function drawScreen(){
 }
 
 function onResize(){
-    gameCanv.width = gameCanv.clientWidth;
-    gameCanv.height = gameCanv.clientHeight;
+    gameCanv.width = gameCanv.clientWidth = canvholder.clientWidth;
+    gameCanv.height = gameCanv.clientHeight = canvholder.clientHeight;
     
     if(gameCanv.width/40 <= gameCanv.height/23){
         tileSize = Math.floor(gameCanv.width/40);
@@ -956,13 +1031,13 @@ function drawGame(){
     menuScreen.style.display = 'none';
     gameCanv.style.display = 'block';
 
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
-    if(canvas.width/40 <= canvas.height/24){
-        tileSize = Math.floor(canvas.width/40);
+    gameCanv.width = gameCanv.clientWidth = canvholder.clientWidth;
+    gameCanv.height = gameCanv.clientHeight = canvholder.clientHeight;
+    if(gameCanv.width/40 <= gameCanv.height/24){
+        tileSize = Math.floor(gameCanv.width/40);
     }
     else{
-        tileSize = Math.floor(canvas.height/24);
+        tileSize = Math.floor(gameCanv.height/24);
     }
 
     Cave.Caves.loadMaps(maps);
@@ -981,6 +1056,7 @@ function resume()
 {
     pauseScreen.style.display = 'none';
     menuScreen.style.display = 'none';
+    sounds.backgroundSound.play();
     paused = false;
 }
 
@@ -1007,6 +1083,26 @@ BoulderDash = function()
     var DIR  = { UP: 0, UPRIGHT: 1, RIGHT: 2, DOWNRIGHT: 3, DOWN: 4, DOWNLEFT: 5, LEFT: 6, UPLEFT: 7 };
     var DIRX = [     0,          1,        1,            1,       0,          -1,      -1,        -1 ];
     var DIRY = [    -1,         -1,        0,            1,       1,           1,       0,        -1 ];
+
+    var BORDERTOUCHPOINTS =
+    {
+        TOPLEFT: 0,
+        TOPDOWN: 1,
+        TOPRIGHT: 2,
+        DOWNLEFT: 3,
+        LEFTRIGHT: 4,
+        DOWNRIGHT: 5,
+        ALL: 6,
+        NONE: 7,
+        DOWN: 8,
+        LEFT: 9,
+        TOP: 10,
+        RIGHT: 11,
+        TOPRIGHTDOWN: 12,
+        RIGHTDOWNLEFT: 13,
+        DOWNLEFTTOP: 14,
+        LEFTTOPRIGHT: 15
+    };
   
     function rotateLeft(dir)  { return (dir-2) + (dir < 2 ? 8 : 0); };
     function rotateRight(dir) { return (dir+2) - (dir > 5 ? 8 : 0); };
@@ -1157,10 +1253,21 @@ BoulderDash = function()
 
         nextLevel: function() { if((Cave.Caves.caveList.length - 1) >= this.index + 1)this.init(Cave.Caves.caveList[this.index + 1]); },
 
-        get:          function(p,dir)   {     return this.tiles[p.x + (DIRX[dir] || 0)][p.y + (DIRY[dir] || 0)].object; },
+        //DIRTY quick fix 
+        get:   function(p,dir)   
+        {    
+            var cell; 
+            var  col = this.tiles[p.x + (DIRX[dir] || 0)]; 
+            
+            if(col) 
+            { 
+                cell = col[p.y + (DIRY[dir] || 0)] 
+            } 
+            return cell ? cell.object : OBJECT.SPACE; 
+        },
         set:          function(p,o,dir) { var cell = this.tiles[p.x + (DIRX[dir] || 0)][p.y + (DIRY[dir] || 0)]; cell.object = o; cell.frame = this.frameCounter; this.triggerEvent('cell', cell) },
         clear:        function(p,dir)   { this.set(p,OBJECT.SPACE,dir); },
-        move:         function(p,dir,o) { this.clear(p); this.set(p,o,dir); },
+        move:         function(p,dir,o) { if(o === OBJECT.ROCKFORD && this.isObjectDirt(p, dir))sounds.moveSound.play(); this.clear(p); this.set(p,o,dir); },
         isObjectSpace:      function(p,dir)   { var o = this.get(p,dir); return OBJECT.SPACE     === o; },
         isObjectDirt:       function(p,dir)   { var o = this.get(p,dir); return OBJECT.DIRT      === o; },
         isObjectRockford:   function(p,dir)   { var o = this.get(p,dir); return OBJECT.ROCKFORD  === o; },
@@ -1225,13 +1332,14 @@ BoulderDash = function()
         collectDiamond: function() 
         {
             this.diamonds.collected++;
+            sounds.diamondSound.play();
             this.increaseScore(this.diamonds.collected > this.diamonds.needed ? this.diamonds.extra : this.diamonds.value);
             this.triggerEvent('diamond', this.diamonds);
         },
 
-        increaseScore: function(n) 
+        increaseScore: function(value) 
         {
-            this.score += n;
+            this.score += value;
             this.triggerEvent('score', this.score);
         },
 
@@ -1476,12 +1584,21 @@ BoulderDash = function()
 
         explode: function(point, direction) 
         {
+            sounds.explosionSound.play();
+
             var tmpPoint        = new Point(point.x, point.y, direction);
             var explosion = (this.isObjectButterfly(tmpPoint) ? OBJECT.EXPLODETODIAMOND0 : OBJECT.EXPLODETOSPACE0);
+
+            if(this.isObjectRockford(point, direction))
+                sounds.deathSound.play();
+
             this.set(tmpPoint, explosion);
       
             for(direction = 0 ; direction < 8 ; direction++) 
             {
+                if(this.isObjectRockford(tmpPoint, direction))
+                    sounds.deathSound.play();
+
                 if (this.isObjectExplodable(tmpPoint, direction))
                     this.explode(tmpPoint, direction);
                 else if (this.isObjectConsumable(tmpPoint, direction))
@@ -1603,70 +1720,310 @@ BoulderDash = function()
             }
         },*/
 
-        score: function() {
-            if (this.invalid.score) {
+        score: function() 
+        {
+            if (this.invalid.score) 
+            {
               this.ctx.fillStyle='black';
+              this.ctx.font = Math.round(tileSize * 0.9) + 'px sans-serif';
               this.ctx.fillRect(0, 0, this.canvas.width, tileSize);
-              this.number(3, game.diamonds.collected, 2);
-              this.letter(  5, '$');  
-              this.number(7, game.diamonds.needed, 2);
-              this.number(25, game.time);
-              this.number(31, game.score);
+
+              this.ctx.textBaseline = 'top';
+              this.ctx.fillStyle = '#a46e2f';
+
+              var namePos =  20 - Math.floor(game.cave.name.length / 2);
+
+              this.number(2, game.diamonds.collected, 2);
+              this.letter(  4, '/');  
+              this.number(5, game.diamonds.needed, 2);
+
+              this.word(namePos, game.cave.name, 14);
+                
+              this.number(29, game.time);
+              this.number(35, game.score);
               this.validateScore();
             }
-          },
+        },
+
+        word: function(x, word, maxWidth)
+        {
+            for(var i = 0; i < word.length; i++)
+            {
+                if(i < maxWidth)
+                    this.letter(x + i, word[i]);
+            }
+        },
       
-          number: function(x, num, width) {
+          number: function(x, num, width) 
+          {
             let numString = num.toString();
             var i, word = ('0000000000' + numString).slice(-(width || numString.length));
             for(i = 0 ; i < word.length ; ++i)
               this.letter(x+i, word[i]);
           },
       
-          letter: function(x, c) {
-            this.ctx.drawImage(this.ctxSprites.canvas, 9 * 32, (c.charCodeAt(0)-32) * 16, 32, 16, (x * tileSize), 0, tileSize, tileSize-4);
+          letter: function(x, char) 
+          {
+            this.ctx.fillText(char, (x * tileSize),  0);
           },
     
         cell: function(cell) 
         {
-            var object = cell.object,
-                sprite = object.sprite;
-            
-            if (this.invalid.cave || cell.invalid || (sprite.f > 1) || (object === OBJECT.ROCKFORD)) 
+            var object = cell.object;
+            var sprite;
+            var spriteObj = currentTheme.objects.find(function(entry, index, arr)
+            {
+                return entry.code === object.code; 
+            });;
+
+            if(spriteObj)
             {
                 if (object === OBJECT.ROCKFORD)
                     return this.rockford(cell);
                 else if ((object === OBJECT.SPACE) && (game.flash > game.frameCounter))
-                    sprite = OBJECT.SPACE.flash;
+                    sprite = spriteObj.sprite.flash;
                 else if ((object === OBJECT.MAGICWALL) && !game.magic.active)
-                    sprite = OBJECT.BRICKWALL.sprite;
+                {
+                    spriteObj = currentTheme.objects.find(function(ele) { return ele.code === OBJECT.BRICKWALL.code });
+                }
+
+                sprite = spriteObj.sprite;
+
+                if(sprite == undefined)
+                    sprite = spriteObj.sprites.down;
+            
+                if(spriteObj.hasDirection === 1)
+                {
+                    switch(cell.p.direction)
+                    {
+                        case DIR.LEFT:
+                                            sprite = spriteObj.sprites.left;
+                                            break;
+                        case DIR.UP:
+                                            sprite = spriteObj.sprites.up;
+                                            break;
+                        case DIR.RIGHT:
+                                            sprite = spriteObj.sprites.right;
+                                            break;
+                        case DIR.DOWN:
+                                            sprite = spriteObj.sprites.down;
+                                            break;
+                        default:            sprite = spriteObj.sprites.down;
+
+                    }
+                }
+
+                if(spriteObj.isBorderSensitive === 1)
+                {
+                    var borderTouchPoint = BORDERTOUCHPOINTS.NONE;
+
+                    borderTouchPoint = this.getBorderTouchPoint(cell)
+
+                    switch(borderTouchPoint)
+                    {
+                        case BORDERTOUCHPOINTS.ALL:
+                                            sprite = spriteObj.sprites.all;
+                                            break;
+                        case BORDERTOUCHPOINTS.NONE:
+                                            sprite = spriteObj.sprites.none;
+                                            break;
+                        case BORDERTOUCHPOINTS.LEFT:
+                                            sprite = spriteObj.sprites.left;
+                                            break;
+                        case BORDERTOUCHPOINTS.TOP:
+                                            sprite = spriteObj.sprites.top;
+                                            break;
+                        case BORDERTOUCHPOINTS.RIGHT:
+                                            sprite = spriteObj.sprites.right;
+                                            break;
+                        case BORDERTOUCHPOINTS.DOWN:
+                                            sprite = spriteObj.sprites.down;
+                                            break;
+                        case BORDERTOUCHPOINTS.TOPDOWN:
+                                            sprite = spriteObj.sprites.topDown;
+                                            break;
+                        case BORDERTOUCHPOINTS.LEFTRIGHT:
+                                            sprite = spriteObj.sprites.leftRight;
+                                            break;
+                        case BORDERTOUCHPOINTS.DOWNLEFT:
+                                            sprite = spriteObj.sprites.downLeft;
+                                            break;
+                        case BORDERTOUCHPOINTS.DOWNRIGHT:
+                                            sprite = spriteObj.sprites.downRight;
+                                            break;
+                        case BORDERTOUCHPOINTS.TOPLEFT:
+                                            sprite = spriteObj.sprites.topLeft;
+                                            break;
+                        case BORDERTOUCHPOINTS.TOPRIGHT:
+                                            sprite = spriteObj.sprites.topRight;
+                                            break;
+                        case BORDERTOUCHPOINTS.TOPRIGHTDOWN:
+                                            sprite = spriteObj.sprites.topRightDown;
+                                            break;
+                        case BORDERTOUCHPOINTS.RIGHTDOWNLEFT:
+                                            sprite = spriteObj.sprites.rightDownLeft;
+                                            break;
+                        case BORDERTOUCHPOINTS.DOWNLEFTTOP:
+                                            sprite = spriteObj.sprites.downLeftTop;
+                                            break;
+                        case BORDERTOUCHPOINTS.LEFTTOPRIGHT:
+                                            sprite = spriteObj.sprites.leftTopRight;
+                                            break;
+                        default:   
+                                            sprite = spriteObj.sprites.none;
+                                            break;
+                
+                    }
+                }   
+            }
+            
+            if (this.invalid.cave || cell.invalid || (sprite.f > 1) || (object === OBJECT.ROCKFORD)) 
+            {
             
                 this.sprite(sprite, cell);
                 this.validateCell(cell);
             }
         },
+
+        getBorderTouchPoint: function(cell)
+        {
+            var sameObj = { 0: false, 2: false, 4: false, 6: false};
+
+            //Check all directions for same object
+            for(var i = 0; i <= 6; i += 2 )
+            {
+                if(cell.object.code === game.get(cell.p, i).code)
+                {
+                    sameObj[i] = true;
+                }
+            }
+
+            if(!sameObj[0])
+            {
+                //its not up
+
+                if(!sameObj[2])
+                {
+                    if(!sameObj[4])
+                    {
+                        if(sameObj[6])
+                            return BORDERTOUCHPOINTS.LEFT;
+                        else
+                            return BORDERTOUCHPOINTS.NONE;
+                    }
+                    
+                    if(sameObj[6])
+                        return BORDERTOUCHPOINTS.DOWNLEFT;
+                    else
+                        return BORDERTOUCHPOINTS.DOWN;
+
+                }
+                else if(!sameObj[4])
+                {
+                    if(!sameObj[6])
+                        return BORDERTOUCHPOINTS.RIGHT;
+                    else
+                        return BORDERTOUCHPOINTS.LEFTRIGHT;
+                }
+
+                if(sameObj[6])
+                    return BORDERTOUCHPOINTS.RIGHTDOWNLEFT;
+                else
+                    return BORDERTOUCHPOINTS.DOWNRIGHT;
+            }
+            else if(!sameObj[2])
+            {
+                //up
+                // not right
+
+                if(!sameObj[4])
+                {
+                    if(sameObj[6])
+                        return BORDERTOUCHPOINTS.TOPLEFT;
+                    else
+                        return BORDERTOUCHPOINTS.TOP;
+                }
+                    
+                if(sameObj[6])
+                    return BORDERTOUCHPOINTS.DOWNLEFTTOP;
+                else
+                    return BORDERTOUCHPOINTS.TOPDOWN;
+            }
+            else if(!sameObj[4])
+            {
+                // up
+                // right
+                // not down
+                    
+                if(sameObj[6])
+                    return BORDERTOUCHPOINTS.LEFTTOPRIGHT;
+                else
+                    return BORDERTOUCHPOINTS.TOPRIGHT;
+
+            }
+            else if(!sameObj[6])
+            {
+                //up
+                //right
+                //down
+                //not left
+                return BORDERTOUCHPOINTS.TOPRIGHTDOWN;
+                
+            }   
+            else
+            {
+                //must be all
+                return BORDERTOUCHPOINTS.ALL;
+            }
+        },
     
         sprite: function(sprite, cell) 
         { 
-            // TODO: get images another way
-            var f = sprite.f ? (Math.floor((sprite.FPS/this.FPS) * this.frameCounter) % sprite.f) : 0;
-            this.ctx.drawImage(this.ctxSprites.canvas, (sprite.x + f) * 32, sprite.y * 32, 32, 32, cell.p.x * tileSize, (cell.p.y + 1) * tileSize, tileSize, tileSize);
+            var f = sprite.frames ? (Math.floor((sprite.FPS/this.FPS) * this.frameCounter) % sprite.frames) : 0;
+            
+            if(sprite.rotation > 0)
+            {
+                var radian = sprite.rotation * Math.PI / 180;
+
+                var transX = cell.p.x * tileSize - (tileSize / 2);
+                var transY = cell.p.y * tileSize - (tileSize / 2);
+
+                this.ctx.translate(transX, transY);
+                this.ctx.rotate(radian);
+                this.translate(-transX, -transY);
+
+                this.ctx.drawImage(this.ctxSprites.canvas, (sprite.x + f) * currentTheme.size, sprite.y * currentTheme.size, currentTheme.size, currentTheme.size,                      cell.p.x * tileSize, (cell.p.y + 1) * tileSize, tileSize, tileSize);
+
+                this.ctx.translate(transX, transY);
+                this.ctx.rotate(-radian);
+                this.translate(-transX, -transY);
+            }
+
+            this.ctx.drawImage(this.ctxSprites.canvas, (sprite.x + f) * currentTheme.size, sprite.y * currentTheme.size, currentTheme.size, currentTheme.size, cell.p.x * tileSize, (cell.p.y + 1) * tileSize, tileSize, tileSize);
+
+
         },
     
         rockford: function(cell) 
         {
-            if ((moving.dir == DIR.LEFT) || (vertical(moving.dir) && (moving.lastXDir == DIR.LEFT)))
-                this.sprite(OBJECT.ROCKFORD.left, cell);
-            else if ((moving.dir == DIR.RIGHT) || (vertical(moving.dir) && (moving.lastXDir == DIR.RIGHT)))
-                this.sprite(OBJECT.ROCKFORD.right, cell);
+            var rockSprite = currentTheme.objects.find(function(ele) { return ele.code === OBJECT.ROCKFORD.code });
+
+            if (moving.dir == DIR.LEFT)
+                this.sprite(rockSprite.sprites.left, cell);
+            else if(moving.dir == DIR.UP)
+                this.sprite(rockSprite.sprites.up, cell);
+            else if (moving.dir == DIR.RIGHT)
+                this.sprite(rockSprite.sprites.right, cell);
+            else if (moving.dir == DIR.DOWN)
+                this.sprite(rockSprite.sprites.down, cell);
             else if (game.idle.blink && !game.idle.tap)
-                this.sprite(OBJECT.ROCKFORD.blink, cell);
+                this.sprite(rockSprite.sprites.blink, cell);
             else if (!game.idle.blink && game.idle.tap)
-                this.sprite(OBJECT.ROCKFORD.tap, cell);
+                this.sprite(rockSprite.sprites.tap, cell);
             else if (game.idle.blink && game.idle.tap)
-                this.sprite(OBJECT.ROCKFORD.blinktap, cell);
+                this.sprite(rockSprite.sprites.blinktap, cell);
             else
-                this.sprite(OBJECT.ROCKFORD.sprite, cell);
+                this.sprite(rockSprite.sprites.still, cell);
         },
     
     
@@ -1708,8 +2065,8 @@ BoulderDash = function()
         resize: function() 
         {
             var visibleArea = { w: 40, h: 23 };            
-            this.canvas.width  = this.canvas.clientWidth;  
-            this.canvas.height = this.canvas.clientHeight; 
+            this.canvas.width  = this.canvas.clientWidth = canvholder.clientWidth;  
+            this.canvas.height = this.canvas.clientHeight = canvholder.clientHeight; 
             tileSize = this.canvas.width  / visibleArea.w;
             this.invalidateScore();
             this.invalidateCave();
@@ -1724,6 +2081,9 @@ BoulderDash = function()
     {   
         var now, last = performance.now(), dt = 0, gdt = 0, rdt = 0;
         
+        sounds.backgroundSound.loop = true;
+        sounds.backgroundSound.play();
+
         function frame() 
         {
             now = performance.now();
@@ -1767,7 +2127,7 @@ BoulderDash = function()
     { //TODO: rewrite for loading multiple files
         var sprites = document.createElement('img');
         sprites.addEventListener('load', function() { cb(sprites); } , false);
-        sprites.src = '../Images/sprites.png';
+        sprites.src = 'assets/' + currentTheme.sprite;
     };
         
         
@@ -1816,9 +2176,9 @@ BoulderDash = function()
             case KEY.D:
             case KEY.RIGHT: moving.stopRight(); handled = true; break;
             case KEY.SPACE: moving.stopGrab(); handled = true; break;
-            case KEY.P:     if(!paused) pauseScreen.style.display = 'block'; else pauseScreen.style.display = 'none';  paused = !paused; break;
+            case KEY.P:     if(!paused) { pauseScreen.style.display = 'block'; sounds.backgroundSound.pause(); paused = !paused; }else { resume(); }  break;
             case KEY.N:     game.nextLevel(); break;
-            case KEY.B:     game.previousLevel(); break; //TOOD: implement
+            case KEY.B:     game.previousLevel(); break; //TOOD:  maybe implement
         }
     }
         
