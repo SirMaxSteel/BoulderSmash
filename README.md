@@ -26,6 +26,7 @@ If the game is moved into a sub folder you might need to adjust the paths in sev
 * Add Highscore
 * Add MapEditor
 * Add Community Section
+* Make Theme Switcher work
 * Add more Themes
 
 
