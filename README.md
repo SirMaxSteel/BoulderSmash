@@ -14,7 +14,7 @@ If the game is moved into a sub folder you might need to adjust the paths in sev
 - [x] Chrome (v.60+)
 - [x] Firefox (v.54+)
 - [x] Safari (v.10.1+)
-- [x] InternetExplorer (v.11+) (Thanks to Microsoft for not adopting "display:flex")
+- [x] InternetExplorer (v.11+) (Thanks to Microsoft for not adopting "display:flex" earlier)
 - [x] Opera (v.46+)
 
 ## Known bugs ##
