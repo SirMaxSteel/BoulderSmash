@@ -6,7 +6,7 @@ Basically this game is a poped-up retro version of the original BoulderDash from
 It is writtin in HTML5, CSS3 and JavaScript.
 
 ## Installation ##
-To install this game you need to run a webserver with php support. Copy all the files into your web site root folder and you are good to go.
+To install this game you need to run a webserver with php support. Copy all the files located in the folder "game" into your web site root folder and you are good to go.
 To run the game open the index.html.
 If the game is moved into a sub folder you might need to adjust the paths in several files.
 
