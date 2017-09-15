@@ -11,10 +11,10 @@ To run the game open the index.html.
 If the game is moved into a sub folder you might need to adjust the paths in several files.
 
 ## Supported browsers ##
-- [x] Chrome (v.61+)
+- [x] Chrome (v.60+)
 - [x] Firefox (v.54+)
 - [x] Safari (v.10.1+)
-- [x] InternetExplorer (v.11+) (Thanks to "display:flex")
+- [x] InternetExplorer (v.11+) (Thanks to Microsoft for not adopting "display:flex")
 - [x] Opera (v.46+)
 
 ## Known bugs ##
