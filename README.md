@@ -1,34 +1,34 @@
 # BoulderSmash
 A new Boulder Dash experience
 
-##What is it about?##
+## What is it about? ##
 Basically this game is a poped-up retro version of the original BoulderDash from 1984.
 It is writtin in HTML5, CSS3 and JavaScript.
 
-##Installation##
+## Installation ##
 To install this game you need to run a webserver with php support. Copy all the files into your web site root folder and you are good to go.
 To run the game open the index.html.
 If the game is moved into a sub folder you might need to adjust the paths in several files.
 
-##Supported browsers##
+## Supported browsers ##
 - [x] Chrome (v.61+)
 - [x] Firefox (v.54+)
 - [x] Safari (v.10.1+)
 - [x] InternetExplorer (v.11+) (Thanks to "display:flex")
 - [x] Opera (v.46+)
 
-##Known bugs##
+## Known bugs ##
 * PauseMenu resize => Canvas not rendering
 * If a butterfly or a firefly runs into an explosion, it doesnt move anymore
 
-##To do##
+## To do ##
 * Fix known bugs
 * Add more Themes
 
 
-##Licensing##
+## Licensing ##
 Please see the file LICENSE
 
-##Authors##
+## Authors ##
 [LucasMoll](https://github.com/LucasMoll)
 [SirMaxSteel](https://github.com/SirMaxSteel)
