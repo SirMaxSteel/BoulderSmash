@@ -23,6 +23,8 @@ If the game is moved into a sub folder you might need to adjust the paths in sev
 
 ## To do ##
 * Fix known bugs
+* Add Highscore
+* Add MapEditor
 * Add more Themes
 
 
