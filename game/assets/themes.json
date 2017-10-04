@@ -3,7 +3,7 @@
     [
         {
             "name": "Pacman",
-            "prevImg": {"x":7,"y":10},
+            "prevImg": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQCAYAAACAvzbMAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4QoDCzYY3+wzCgAAB91JREFUeNrt3MFRG0EQhtHRFtdJYKNBmRGalIwSUADigAhgd4elp/u9Kp9tQ5mv/h5wawAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAoFx8C+PF8tNeZv19f/ftDQEAcRAYBAZEQFxAQxKIcUUFAQCxEBQEBwRAUBAREQ0xAQBAMBAUBQTQQEwQE0UBMEBBEAzFBQEA0EBMEBOFASBAQRAMxQUAQDoQEAUE4QEgEBOEAIUFAEA6EBAFBNBATBAThACEREIQDhERAEA4QEgQE8UBEEBCEAyFBQBAPEBEBQThASAQE4QAhQUDEA0QEAUE4QEgEBOEAIREQxANEREAQDxARBEQ4QEiEREAQDxARAUE4QEgEBPEAEREQxANEBAERD0BEBEQ4ACEREMQDRERAEA8QEQREPAARERDxAEREQIQDEBIBQTxARAQE8QARQUDEAxARAREPQEQERDwAEREQxANEREAQD0BEBEQ8ABEREPEARERAxAMQEQERD0BEBATxAEREQMQDEBEBEQ9ARAREPAARERDxAKgVkcWnGwALxPoArBABEQ9ARAREPAARERDxABARAREPQEQO8F1YAFgg1gdghQiIeAAiIiDiAZAxIgIiHoCI7OIRHQALxPoArBABEQ9ARIJzwgLAArE+ACtEQMQDEBEBEQ+AjBHxBgKABWJ9AFaIBQKABWJ9AGRcIeUCIh6AiIzhhAWABWJ9AFaIBQKABWJ9AGRcISUCIh6AiIznhAWABWJ9AFaIgIgHQPCIOGEBYIFYH4AVYoEAYIFYHwAZV4gFAoCAWB9Ads9HuwkIAFvcW2vXvrbPKH+gD58TgPDh+OprnOXxK9UjuvMVIBwWCIBwBJdmgVgfgHBYIADCMYEUC8T6AITDAgEQDgvE+gDIGA4LBEA46i4Q6wMQDgsEQDgEBEA4Kpj2hOV8BQiHBQIgHBaI9QEIhwUCgHAICIBwjDbdCcv5ChAOCwRAOAQEQDiqmeqE5XwFCIcFAiAcAgIgHBVNc8JyvgKEwwIBEA4BARCOqqY4YTlfAcJhgQAIh4AACIeAAAgHG4V/A/H+AQiHBQIgHAICIBzVhT5hOV+BcAiHBQIgHAICIBwICCAc7BT2DcT7BwgHFgiAcAgIgHAgIIBwICCAcHC2kI/oHtBBOLBAAOFAQACEAwEBhAMBAYSD/xDuEd0DOggHFgggHAgIIBwgIIBwICCAcCAggHAgIIBwkF+ob+P1LbwgHFgggHAgIIBwgICAcICAAMKBgADCgYAAwoGAAMIBAgLCAWOF+UFCP0QIwoEFAggHAgIIBwgICAcICAgHCAggHAgIIBwICCAcICAgHCAgIBwgICAcICCAcCAggHCAgIBwwJ9ZfAjgsNf7F5Tiv3OHcW7vJXL3oUBABASEBAQEhAQEBIQEBERAEBIQEAEBIUFABASEBAQEhAQEBIQEBERAQEgQEAEBIUFABASEBAQEhAQKBEREQEgQEAEBIUFABASEBAQEhAQEBBASBERAQEgQEAEBIUFABASEBAQEEBKSB0REQEgQEAEBIUFABASEBAQEEBIEBBASBERAQEgQEAEBIUFARAQQEgQEEBIEBBASBERAQEgQEAEBhERARAQQEgQEEBIEBBASBERAQEiEREAEBBASARERQEgQEEBIEBBASBAQAQGEREBEBBASAREQQEgQEEBIEBARAYREQAQEEBIBERBASBAQQEjIGxARAYREQAQEEBIBERBASARERAAhQUAAhERABAQQEgEREUBIBERAACFBQACEpEhARAQQEgEREEBIBERAACEREBEBEBIBARASARERQEgEREAAIREQAQEoGpLL7H8BEQGEREAEBBASARERgOwhERAAIakbEBEBhERABAQQEgEREYDMIREQACEREBEBhERABAQgeEgEBGCykPS1XQVERAA26Wucr9uLTwcAFogVAlgfFggAFogVApBsfVggAFggVghgfQiIiAAEj0drTlgAWCBWCGB9CIiIAOIR/uuzExYAFogVAlgfFggAFogVApBtfZQNiIgA4nGcExYAFogVAlgfFggAFogVApBtfQiIiADiISAiAojHubyBAGCBWCGA9SEgIgKIR3BOWABYIFYIYH0IiIgA4iEgIgKQLR4CIiKAeOzmER0AC8QKAawPARERQDwEREQA8RAQRAQQDwEREUA8jvBdWABYIFYIYH0IiIgA4iEgIgKIh4AgIoB4CIiIAOIhICICiIeAiAggHgIiIoB4CAgiAoiHgIgIIB4CIiKAeAiIiADiISCICIiHgCAiIB4IiIgA4iEgIgKIh4AICSAcAoKIgHgICCIC4oGAiAggHgIiIoB4CAhCAsIhIIgIiIeAICIgHgiIiADiISBCIiQgHAKCiIB4CAhCAsIhIIgIiAcCIiIgHggIQgLCISAICQiHgCAiIB4CgpCAcCAgCAnCgYAgIiAeAoKQgHAICCIC4oGACAkIBwKCkCAcCAhCgnAgIIgJiIaAICQgHAgIQoJwICAICcKBgCAkCAcCgpggGggICAnCgYAgJogGAoKYIBoICGKCaCAgICaigYCAoAgGCAhigmggIAgKgoGAgKiIBQICoiIWCAiIi0iAgEDMyIgDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDMvgFQf2F3iurRfQAAAABJRU5ErkJggg==",
             "sprite":"pacman.png",
             "gameBarFont": "sans-serif",
             "gameBarFontcolor": null,
@@ -27,20 +27,20 @@
                     {
                         "topLeft": { "x": 2, "y": 9, "rotationAngle": 180},
                         "topDown": { "x": 1, "y": 9,  "rotationAngle": 0},
-                        "topRight": { "x": 2, "y": 9, "rotationAngle": -90 },
+                        "topRight": { "x": 2, "y": 9, "rotationAngle": 270 },
                         "downLeft": { "x": 2, "y": 9, "rotationAngle": 90 },
                         "leftRight": { "x": 1, "y": 9, "rotationAngle": 90 },
-                        "downRight": { "x": 1, "y": 9, "rotationAngle": 0 },
+                        "downRight": { "x": 2, "y": 9, "rotationAngle": 0 },
                         "all": { "x": 3, "y": 9, "rotationAngle": 0 },
                         "none": { "x": 6, "y": 9, "rotationAngle": 0 },
                         "down": { "x": 5, "y": 9, "rotationAngle": 0 },
                         "left": { "x": 5, "y": 9, "rotationAngle": 90 },
                         "top": { "x": 5, "y": 9, "rotationAngle": 180 },
-                        "right": { "x": 5, "y": 9, "rotationAngle": -90 },
+                        "right": { "x": 5, "y": 9, "rotationAngle": 270 },
                         "topRightDown": { "x": 4, "y": 9, "rotationAngle": 0 },
                         "rightDownLeft": { "x": 4, "y": 9, "rotationAngle": 90 },
                         "downLeftTop": { "x": 4, "y": 9, "rotationAngle": 180 },
-                        "leftTopRight": { "x": 4, "y": 9, "rotationAngle": -90 }
+                        "leftTopRight": { "x": 4, "y": 9, "rotationAngle": 270 }
                     }
                 },
                 {
@@ -58,7 +58,7 @@
                     {
                         "topLeft": { "x": 3, "y": 0, "rotationAngle": 180},
                         "topDown": { "x": 2, "y": 0,  "rotationAngle": 0},
-                        "topRight": { "x": 3, "y": 0, "rotationAngle": -90 },
+                        "topRight": { "x": 3, "y": 0, "rotationAngle": 270 },
                         "downLeft": { "x": 3, "y": 0, "rotationAngle": 90 },
                         "leftRight": { "x": 2, "y": 0, "rotationAngle": 90 },
                         "downRight": { "x": 3, "y": 0, "rotationAngle": 0 },
@@ -67,11 +67,11 @@
                         "down": { "x": 6, "y": 0, "rotationAngle": 0 },
                         "left": { "x": 6, "y": 0, "rotationAngle": 90 },
                         "top": { "x": 6, "y": 0, "rotationAngle": 180 },
-                        "right": { "x": 6, "y": 0, "rotationAngle": -90 },
+                        "right": { "x": 6, "y": 0, "rotationAngle": 270 },
                         "topRightDown": { "x": 5, "y": 0, "rotationAngle": 0 },
                         "rightDownLeft": { "x": 5, "y": 0, "rotationAngle": 90 },
                         "downLeftTop": { "x": 5, "y": 0, "rotationAngle": 180 },
-                        "leftTopRight": { "x": 5, "y": 0, "rotationAngle": -90 }
+                        "leftTopRight": { "x": 5, "y": 0, "rotationAngle": 270 }
                     }
                 },
                 {
@@ -247,6 +247,257 @@
                         "blink": { "x": 0, "y": 1,  "frames": 8, "FPS": 20 },   
                         "tap": { "x": 0, "y": 2,  "frames": 8, "FPS": 20 },   
                         "blinktap": { "x": 0, "y": 3,  "frames": 8, "FPS": 20 } 
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "Ms Pacman",
+            "prevImg": "data:image/png;base64,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",
+            "sprite":"mspacman.png",
+            "gameBarFont": "sans-serif",
+            "gameBarFontcolor": null,
+            "gameBarBackround": "black",
+            "gameBarFontstyle": null,
+            "size": { "width": 400, "height": 400},
+            "objects":
+            [
+                {
+                    "code": 0,
+                    "sprite": { "x": 0, "y": 0, "flash": { "x": 1, "y":0 } }
+                },
+                {
+                    "code": 1,
+                    "sprite": { "x": 7, "y": 9 }
+                },
+                {
+                    "code": 2,
+                    "isBorderSensitive": 1,
+                    "sprites": 
+                    {
+                        "topLeft": { "x": 2, "y": 9, "rotationAngle": 180},
+                        "topDown": { "x": 1, "y": 9,  "rotationAngle": 0},
+                        "topRight": { "x": 2, "y": 9, "rotationAngle": 270 },
+                        "downLeft": { "x": 2, "y": 9, "rotationAngle": 90 },
+                        "leftRight": { "x": 1, "y": 9, "rotationAngle": 90 },
+                        "downRight": { "x": 2, "y": 9, "rotationAngle": 0 },
+                        "all": { "x": 3, "y": 9, "rotationAngle": 0 },
+                        "none": { "x": 6, "y": 9, "rotationAngle": 0 },
+                        "down": { "x": 5, "y": 9, "rotationAngle": 0 },
+                        "left": { "x": 5, "y": 9, "rotationAngle": 90 },
+                        "top": { "x": 5, "y": 9, "rotationAngle": 180 },
+                        "right": { "x": 5, "y": 9, "rotationAngle": 270 },
+                        "topRightDown": { "x": 4, "y": 9, "rotationAngle": 0 },
+                        "rightDownLeft": { "x": 4, "y": 9, "rotationAngle": 90 },
+                        "downLeftTop": { "x": 4, "y": 9, "rotationAngle": 180 },
+                        "leftTopRight": { "x": 4, "y": 9, "rotationAngle": 270 }
+                    }
+                },
+                {
+                    "code": 4,
+                    "sprite": { "x": 4, "y": 10}
+                },
+                {
+                    "code": 5,
+                    "sprite": { "x": 4, "y": 10, "frames": 3, "FPS": 4}
+                },
+                {
+                    "code": 7,
+                    "isBorderSensitive": 1,
+                    "sprites": 
+                    {
+                        "topLeft": { "x": 3, "y": 0, "rotationAngle": 180},
+                        "topDown": { "x": 2, "y": 0,  "rotationAngle": 0},
+                        "topRight": { "x": 3, "y": 0, "rotationAngle": 270 },
+                        "downLeft": { "x": 3, "y": 0, "rotationAngle": 90 },
+                        "leftRight": { "x": 2, "y": 0, "rotationAngle": 90 },
+                        "downRight": { "x": 3, "y": 0, "rotationAngle": 0 },
+                        "all": { "x": 4, "y": 0, "rotationAngle": 0 },
+                        "none": { "x": 7, "y": 0, "rotationAngle": 0 },
+                        "down": { "x": 6, "y": 0, "rotationAngle": 0 },
+                        "left": { "x": 6, "y": 0, "rotationAngle": 90 },
+                        "top": { "x": 6, "y": 0, "rotationAngle": 180 },
+                        "right": { "x": 6, "y": 0, "rotationAngle": 270 },
+                        "topRightDown": { "x": 5, "y": 0, "rotationAngle": 0 },
+                        "rightDownLeft": { "x": 5, "y": 0, "rotationAngle": 90 },
+                        "downLeftTop": { "x": 5, "y": 0, "rotationAngle": 180 },
+                        "leftTopRight": { "x": 5, "y": 0, "rotationAngle": 270 }
+                    }
+                },
+                {
+                    "code": 8,
+                    "hasDirection": 1,
+                    "sprites": 
+                    { 
+                        "left": { "x": 6, "y": 6, "frames": 2, "FPS": 5 },
+                        "up": { "x": 2, "y": 6, "frames": 2, "FPS": 5 },
+                        "right": { "x": 4, "y": 6, "frames": 2, "FPS": 5 },
+                        "down": { "x": 0, "y": 6, "frames": 2, "FPS": 5 }
+                    }
+                },
+                {
+                    "code": 9,
+                    "hasDirection": 1,
+                    "sprites": 
+                    { 
+                        "left": { "x": 6, "y": 6, "frames": 2, "FPS": 5 },
+                        "up": { "x": 2, "y": 6, "frames": 2, "FPS": 5 },
+                        "right": { "x": 4, "y": 6, "frames": 2, "FPS": 5 },
+                        "down": { "x": 0, "y": 6, "frames": 2, "FPS": 5 }
+                    }
+                },
+                {
+                    "code": 10,
+                    "hasDirection": 1,
+                    "sprites": 
+                    { 
+                        "left": { "x": 6, "y": 6, "frames": 2, "FPS": 5 },
+                        "up": { "x": 2, "y": 6, "frames": 2, "FPS": 5 },
+                        "right": { "x": 4, "y": 6, "frames": 2, "FPS": 5 },
+                        "down": { "x": 0, "y": 6, "frames": 2, "FPS": 5 }
+                    }
+                },
+                {
+                    "code": 11,
+                    "hasDirection": 1,
+                    "sprites": 
+                    { 
+                        "left": { "x": 6, "y": 6, "frames": 2, "FPS": 5 },
+                        "up": { "x": 2, "y": 6, "frames": 2, "FPS": 5 },
+                        "right": { "x": 4, "y": 6, "frames": 2, "FPS": 5 },
+                        "down": { "x": 0, "y": 6, "frames": 2, "FPS": 5 }
+                    }
+                },
+                {
+                    "code": 16,
+                    "sprite": { "x": 0, "y": 9}
+                },
+                {
+                    "code": 18,
+                    "sprite": { "x": 0, "y": 9}
+                },
+                {
+                    "code": 20,
+                    "sprite": { "x": 0, "y": 8}
+                },
+                {
+                    "code": 22,
+                    "sprite": { "x": 0, "y": 8}
+                },
+                {
+                    "code": 27,
+                    "sprite": { "x": 0, "y": 10}
+                },
+                {
+                    "code": 28,
+                    "sprite": { "x": 1, "y": 10}
+                },
+                {
+                    "code": 29,
+                    "sprite": { "x": 2, "y": 10}
+                },
+                {
+                    "code": 30,
+                    "sprite": { "x": 3, "y": 10}
+                },
+                {
+                    "code": 31,
+                    "sprite": { "x": 3, "y": 10}
+                },
+                {
+                    "code": 32,
+                    "sprite": { "x": 0, "y": 10}
+                },
+                {
+                    "code": 33,
+                    "sprite": { "x": 1, "y": 10}
+                },
+                {
+                    "code": 34,
+                    "sprite": { "x": 2, "y": 10}
+                },
+                {
+                    "code": 35,
+                    "sprite": { "x": 3, "y": 10}
+                },
+                {
+                    "code": 36,
+                    "sprite": { "x": 3, "y": 10}
+                },
+                {
+                    "code": 37,
+                    "sprite": { "x": 0, "y": 1}
+                },
+                {
+                    "code": 38,
+                    "sprite": { "x": 0, "y": 1}
+                },
+                {
+                    "code": 39,
+                    "sprite": { "x": 0, "y": 1}
+                },
+                {
+                    "code": 40,
+                    "sprite": { "x": 0, "y": 1}
+                },
+                {
+                    "code": 48,
+                    "hasDirection": 1,
+                    "sprites": 
+                    { 
+                        "left": { "x": 6, "y": 7, "frames": 2, "FPS": 5 },
+                        "up": { "x": 2, "y": 7, "frames": 2, "FPS": 5 },
+                        "right": { "x": 4, "y": 7, "frames": 2, "FPS": 5 },
+                        "down": { "x": 0, "y": 7, "frames": 2, "FPS": 5 }
+                    }
+                },
+                {
+                    "code": 49,
+                    "hasDirection": 1,
+                    "sprites": 
+                    { 
+                        "left": { "x": 6, "y": 7, "frames": 2, "FPS": 5 },
+                        "up": { "x": 2, "y": 7, "frames": 2, "FPS": 5 },
+                        "right": { "x": 4, "y": 7, "frames": 2, "FPS": 5 },
+                        "down": { "x": 0, "y": 7, "frames": 2, "FPS": 5 }
+                    }
+                },
+                {
+                    "code": 50,
+                    "hasDirection": 1,
+                    "sprites": 
+                    { 
+                        "left": { "x": 6, "y": 7, "frames": 2, "FPS": 5 },
+                        "up": { "x": 2, "y": 7, "frames": 2, "FPS": 5 },
+                        "right": { "x": 4, "y": 7, "frames": 2, "FPS": 5 },
+                        "down": { "x": 0, "y": 7, "frames": 2, "FPS": 5 }
+                    }
+                },
+                {
+                    "code": 51,
+                    "hasDirection": 1,
+                    "sprites": 
+                    { 
+                        "left": { "x": 6, "y": 7, "frames": 2, "FPS": 5 },
+                        "up": { "x": 2, "y": 7, "frames": 2, "FPS": 5 },
+                        "right": { "x": 4, "y": 7, "frames": 2, "FPS": 5 },
+                        "down": { "x": 0, "y": 7, "frames": 2, "FPS": 5 }
+                    }
+                },
+                { 
+                    "code": 56,  
+                    "hasDirection":1,
+                    "sprites": 
+                    {
+                        "still": { "x": 0, "y": 1                 },
+                        "left": { "x": 0, "y": 4,  "frames": 8, "FPS": 20 },
+                        "up": { "x": 0, "y": 2, "frames": 8, "FPS": 20 },
+                        "down": { "x": 0, "y": 3, "frames": 8, "FPS": 20},  
+                        "right": { "x": 0, "y": 5,  "frames": 8, "FPS": 20 },  
+                        "blink": { "x": 0, "y": 1,  "frames": 8, "FPS": 20 },   
+                        "tap": { "x": 0, "y": 1,  "frames": 8, "FPS": 20 },   
+                        "blinktap": { "x": 0, "y": 1,  "frames": 8, "FPS": 20 } 
                     }
                 }
             ]

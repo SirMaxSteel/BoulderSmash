@@ -21,6 +21,7 @@ var currentScreen = SCREENS.LOADING;
 var themes;
 
 var currentTheme;
+var currentThemeIndex = 0;
 
 var activeTheme;
 var tileSize;
@@ -28,8 +29,11 @@ var mapsLoaded = 0;
 var allThemesLoaded = 0;
 
 var paused = false;
+var gameRunning = false;
 
 var highscoreSection;
+
+var assetsPath = 'assets/';
 
 //sounds
 
@@ -432,7 +436,30 @@ var AJAX = (function()
                         alert(themes.errorMsg);
                     }
     
-                    Util.triggerPubEvent('themesLoaded', themes);
+                    var counter = themes.themes.length;
+
+                    for(var i = 0; i < counter; i++)
+                    {
+                        var spriteImg = document.createElement('img');
+                        spriteImg.addEventListener('load', function() { counter-- });
+                        spriteImg.src = assetsPath + themes.themes[i].sprite;
+
+                        themes.themes[i].spriteImg = spriteImg;
+                    }
+
+                    loadThemeImgs = function()
+                    {
+                        if(counter > 0)
+                        {
+                            setTimeout(loadThemeImgs, 500);
+                        }
+                        else
+                        {
+                            Util.triggerPubEvent('themesLoaded', themes);
+                        }
+                    }
+
+                    loadThemeImgs();
                 }
             };
         
@@ -828,6 +855,10 @@ function game()
     menuScreen = document.getElementById('menuScreen');
     pauseScreen = document.getElementById('pauseScreen');
 
+    themeNameSpan = document.getElementById('themeNameSpan');
+    currThemeImg = document.getElementById('currThemeImg');
+    currThemeHolder = document.getElementById('ThemeCurrent');
+
     highscoreSection = document.getElementById('menuScoreScores');
     //TODO: load the scores
 
@@ -891,8 +922,42 @@ function bdMapsLoaded()
 function themesLoaded(themes)
 {
     themes = themes;
+
     allThemesLoaded = 1;
+
     currentTheme = themes.themes[0];
+    currentThemeIndex = 0;
+}
+
+function nextTheme()
+{
+    if(currentThemeIndex < (themes.themes.length - 1))
+        currentThemeIndex++;
+    else 
+        currentThemeIndex = 0;
+
+    changeTheme();
+}
+
+function prevTheme()
+{
+    if(currentThemeIndex > 0)
+        currentThemeIndex--;
+    else 
+        currentThemeIndex = themes.themes.length - 1;
+
+    changeTheme();
+}
+
+function changeTheme()
+{
+    currentTheme = themes.themes[currentThemeIndex];
+    currThemeImg.width = currThemeHolder.clientWidth;
+    currThemeImg.height = currThemeHolder.clientHeight;
+    currThemeImg.src = currentTheme.prevImg;
+    themeNameSpan.innerText = currentTheme.name;
+
+    Util.triggerPubEvent('themeChanged', currentTheme.spriteImg);
 }
 
 // Load all pictures from themes into themes
@@ -939,8 +1004,9 @@ function loadAssets(){
     // Wait until all themes are completly loaded
     var checkFinished  = function(){
         if (finished == 0 && mapsLoaded === 1 && allThemesLoaded == 1){
-            currentScreen = SCREENS.MENU; // TODO: change back to 1 for menu
+            currentScreen = SCREENS.MENU;
             drawScreen();
+            changeTheme();
         }
         else setTimeout(checkFinished, 500);
     }
@@ -1040,8 +1106,18 @@ function drawGame(){
         tileSize = Math.floor(gameCanv.height/24);
     }
 
-    Cave.Caves.loadMaps(maps);
-    BoulderDash();
+    if(!gameRunning)
+    {
+        Cave.Caves.loadMaps(maps);
+        gameRunning = true;
+        BoulderDash();
+    }
+    else 
+    {
+        paused = false;
+        BoulderDash.render.invalidateCave();
+        BoulderDash.render.invalidateScore();
+    }
 }
 
 function drawMapEditor(){
@@ -1666,6 +1742,7 @@ BoulderDash = function()
         gameObject.registerEvent('time', this.invalidateScore, this);
         gameObject.registerEvent('flash', this.invalidateCave,  this);
         gameObject.registerEvent('cell',  this.invalidateCell,  this);
+        Util.registerPubEvent('themeChanged', this.onThemeChanged, this);
     }
     
     Render.prototype = 
@@ -1675,17 +1752,33 @@ BoulderDash = function()
         {
             this.canvas     = document.getElementById('gameCanvas');
             this.ctx        = this.canvas.getContext('2d'); //TODO take global canvas
+            this.ctx.fillStyle = 'black';
             this.sprites    = sprites;
             this.FPS        = 30;
             this.step       = 1/this.FPS;
             this.frameCounter      = 0;
-            this.ctxSprites = document.createElement('canvas').getContext('2d');
+            this.spriteCanv = document.createElement('canvas');
+            this.ctxSprites = this.spriteCanv.getContext('2d');
+            this.ctxSprites.canvas.clientWidth = canvholder.clientWidth;
+            this.ctxSprites.canvas.clientHeight = canvholder.clientHeight;
             this.ctxSprites.canvas.width  = this.sprites.width;
             this.ctxSprites.canvas.height = this.sprites.height;
             this.ctxSprites.drawImage(this.sprites, 0, 0, this.sprites.width, this.sprites.height, 0, 0, this.sprites.width, this.sprites.height);
+
+            this.ctx.fillRect(0,0, this.ctx.canvas.width, this.ctx.canvas.height);
             this.resize();
         },
     
+        onThemeChanged: function(spriteImg)
+        {
+            this.sprites = spriteImg;
+            this.ctxSprites.canvas.clientWidth = canvholder.clientWidth;
+            this.ctxSprites.canvas.clientHeight = canvholder.clientHeight;
+            this.ctxSprites.canvas.width  = this.sprites.width;
+            this.ctxSprites.canvas.height = this.sprites.height;
+            this.ctxSprites.drawImage(this.sprites, 0, 0, this.sprites.width, this.sprites.height, 0, 0, this.sprites.width, this.sprites.height);
+        },
+
         onChangeLevel: function(info) 
         {
             this.colors(info.color1, info.color2);
@@ -1695,7 +1788,12 @@ BoulderDash = function()
     
         invalid: { score: true, cave:  true },
         invalidateScore: function()     { this.invalid.score = true;  },
-        invalidateCave:  function()     { this.invalid.cave  = true;  },
+        invalidateCave:  function()     
+        {  
+            this.ctx.fillStyle = 'black';
+            this.ctx.fillRect(0, tileSize, this.ctx.canvas.width, this.ctx.canvas.height - tileSize);
+            this.invalid.cave  = true;
+        },
         invalidateCell:  function(cell) { cell.invalid       = true;  },
         validateScore:   function()     { this.invalid.score = false; },
         validateCave:    function()     { this.invalid.cave  = false; },
@@ -1724,7 +1822,7 @@ BoulderDash = function()
         {
             if (this.invalid.score) 
             {
-              this.ctx.fillStyle='black';
+              this.ctx.fillStyle = currentTheme.gameBarBackround;
               this.ctx.font = Math.round(tileSize * 0.9) + 'px sans-serif';
               this.ctx.fillRect(0, 0, this.canvas.width, tileSize);
 
@@ -1787,7 +1885,10 @@ BoulderDash = function()
                     spriteObj = currentTheme.objects.find(function(ele) { return ele.code === OBJECT.BRICKWALL.code });
                 }
 
-                sprite = spriteObj.sprite;
+                if(object == OBJECT.SPACE && game.flash > game.frameCounter)
+                    sprite = spriteObj.sprite.flash;
+                else
+                    sprite = spriteObj.sprite;
 
                 if(sprite == undefined)
                     sprite = spriteObj.sprites.down;
@@ -1981,25 +2082,25 @@ BoulderDash = function()
         { 
             var f = sprite.frames ? (Math.floor((sprite.FPS/this.FPS) * this.frameCounter) % sprite.frames) : 0;
             
-            if(sprite.rotation > 0)
+            if(sprite.rotationAngle > 0)
             {
-                var radian = sprite.rotation * Math.PI / 180;
+                this.ctx.save();
 
-                var transX = cell.p.x * tileSize - (tileSize / 2);
-                var transY = cell.p.y * tileSize - (tileSize / 2);
+                var radian = sprite.rotationAngle * Math.PI / 180;
+
+                var transX = cell.p.x * tileSize + (tileSize / 2);
+                var transY = (cell.p.y + 1) * tileSize + (tileSize / 2);
 
                 this.ctx.translate(transX, transY);
                 this.ctx.rotate(radian);
-                this.translate(-transX, -transY);
+                this.ctx.translate(-transX, -transY);
 
-                this.ctx.drawImage(this.ctxSprites.canvas, (sprite.x + f) * currentTheme.size, sprite.y * currentTheme.size, currentTheme.size, currentTheme.size,                      cell.p.x * tileSize, (cell.p.y + 1) * tileSize, tileSize, tileSize);
+                this.ctx.drawImage(this.ctxSprites.canvas, (sprite.x + f) * currentTheme.size.width, sprite.y * currentTheme.size.height, currentTheme.size.width, currentTheme.size.height, cell.p.x * tileSize, (cell.p.y + 1) * tileSize, tileSize, tileSize);
 
-                this.ctx.translate(transX, transY);
-                this.ctx.rotate(-radian);
-                this.translate(-transX, -transY);
+                this.ctx.restore();
             }
-
-            this.ctx.drawImage(this.ctxSprites.canvas, (sprite.x + f) * currentTheme.size, sprite.y * currentTheme.size, currentTheme.size, currentTheme.size, cell.p.x * tileSize, (cell.p.y + 1) * tileSize, tileSize, tileSize);
+            else
+                this.ctx.drawImage(this.ctxSprites.canvas, (sprite.x + f) * currentTheme.size.width, sprite.y * currentTheme.size.height, currentTheme.size.width, currentTheme.size.height, cell.p.x * tileSize, (cell.p.y + 1) * tileSize, tileSize, tileSize);
 
 
         },
@@ -2007,6 +2108,9 @@ BoulderDash = function()
         rockford: function(cell) 
         {
             var rockSprite = currentTheme.objects.find(function(ele) { return ele.code === OBJECT.ROCKFORD.code });
+            var spaceSprite = currentTheme.objects.find(function(ele) { return ele.code === OBJECT.SPACE.code });
+
+            this.sprite(spaceSprite.sprite, cell)
 
             if (moving.dir == DIR.LEFT)
                 this.sprite(rockSprite.sprites.left, cell);
@@ -2067,6 +2171,8 @@ BoulderDash = function()
             var visibleArea = { w: 40, h: 23 };            
             this.canvas.width  = this.canvas.clientWidth = canvholder.clientWidth;  
             this.canvas.height = this.canvas.clientHeight = canvholder.clientHeight; 
+            this.ctx.fillStyle = 'black';
+            this.ctx.fillRect(0,0, this.ctx.canvas.width, this.ctx.canvas.height);
             tileSize = this.canvas.width  / visibleArea.w;
             this.invalidateScore();
             this.invalidateCave();
