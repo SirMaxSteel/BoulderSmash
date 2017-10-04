@@ -101,11 +101,33 @@
                         <div id="deathMenuAction">
                             <input class="pauseMenuAction" type="text" placeholder="Your name here"></input>
                             <div style="height: 6%;"></div>
-                            <div class="pauseMenuAction">
+                            <div class="pauseMenuAction" onclick="submitScore()">
                                 <span>Submit</span>
                             </div>
                             <div style="height: 6%;"></div>
-                            <div class="pauseMenuAction">
+                            <div class="pauseMenuAction" onclick="gotoMenu()">
+                                <span>Menu</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="winScreen"  oncontextmenu="return false;" class="overlayScreen" style="display:none">
+            <div id="winHolder">
+                <div id="winMenu">
+                    <div id="winMenuText">
+                        <span>Win</span>
+                    </div>
+                    <div id="winMenuActionHolder">
+                        <div id="winMenuAction">
+                            <input class="pauseMenuAction" type="text" placeholder="Your name here"></input>
+                            <div style="height: 6%;"></div>
+                            <div class="pauseMenuAction" onclick="submitScore()">
+                                <span>Submit</span>
+                            </div>
+                            <div style="height: 6%;"></div>
+                            <div class="pauseMenuAction" onclick="gotoMenu()">
                                 <span>Menu</span>
                             </div>
                         </div>
@@ -129,7 +151,7 @@
                 </div>
             </div>
         </div>
-        <canvas id="gameCanvas" style="display:none"></canvas>
+        <canvas id="gameCanvas" tabindex="1" style="display:none"></canvas>
         <div id="modalMapSelection" class="modal">
             <div class="modal-box modal-shadow modalZoomIn">
                 <div class="modal-header">

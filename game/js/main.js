@@ -18,6 +18,9 @@ var fullyLoaded = 0;
 var SCREENS = { LOADING: 0, MENU: 1, GAME: 2, MAPEDITOR: 3, COMMUNITY: 4, PAUSE: 5 };
 var currentScreen = SCREENS.LOADING;
 
+var deathScreen;
+var winScreen;
+
 var themes;
 
 var currentTheme;
@@ -860,7 +863,12 @@ function game()
     currThemeHolder = document.getElementById('ThemeCurrent');
 
     highscoreSection = document.getElementById('menuScoreScores');
+    
     //TODO: load the scores
+    //AJAX.loadHighscore();
+
+    deathScreen = document.getElementById('deathScreen');
+    winScreen = document.getElementById('winScreen');
 
     //window.onkeyup = keyUpHandler; // TODO: get from utils
     gameCanv = document.getElementById('gameCanvas');
@@ -1089,6 +1097,8 @@ function drawLoading()
 
 function drawMenu(){
     gameCanv.style.style = 'none';
+    deathScreen.style.display = 'none';
+    winScreen.style.display = 'none';
     menuScreen.style.display = 'block';
 }
 
@@ -1118,6 +1128,8 @@ function drawGame(){
         BoulderDash.render.invalidateCave();
         BoulderDash.render.invalidateScore();
     }
+
+    gameCanv.focus();
 }
 
 function drawMapEditor(){
@@ -1136,9 +1148,16 @@ function resume()
     paused = false;
 }
 
+function submitScore()
+{
+    //submit the score to db
+    gotoMenu();
+}
+
 function gotoMenu()
 {
-
+    currentScreen = SCREENS.MENU;
+    drawScreen();
 }
 
 function play()
@@ -1288,8 +1307,11 @@ BoulderDash = function()
 
     GameObject.prototype = 
     {
+        lifes: 3,
+
         init: function(cave)
         {
+            //deathScreen.display = 'none';
             this.index    = cave.index || 0;
             this.cave     = cave;           
             this.width    = this.cave.width;               
@@ -1302,7 +1324,7 @@ BoulderDash = function()
             this.time    = this.cave.caveTime;             // the time in seconds
             this.idle     = { blink: false, tap: false };  
             this.flash    = false;                         
-            this.won      = false;                         
+            this.won      = false;                       
             this.diamonds = {
               collected: 0,
               needed: this.cave.diamondsNeeded,
@@ -1327,7 +1349,7 @@ BoulderDash = function()
             this.triggerEvent('level', this.cave);
         },
 
-        nextLevel: function() { if((Cave.Caves.caveList.length - 1) >= this.index + 1)this.init(Cave.Caves.caveList[this.index + 1]); },
+        nextLevel: function() { if((Cave.Caves.caveList.length - 1) >= this.index + 1)this.init(Cave.Caves.caveList[this.index + 1]); else { winScreen.style.display = 'block'; paused = true; } },
 
         //DIRTY quick fix 
         get:   function(p,dir)   
@@ -1430,8 +1452,19 @@ BoulderDash = function()
 
         loseLevel: function() 
         {
-            //TODO: show loosing screen with highscore card
-            this.init(Cave.Caves.caveList[this.index]);
+            this.lifes--;
+
+            if(this.lifes == 0)
+            {
+                //TODO: show loosing screen with highscore card
+                deathScreen.style.display = 'block';
+                paused = true;
+                this.lifes = 3;
+            }
+            else
+            {
+                this.init(Cave.Caves.caveList[this.index]);
+            }
         },
 
         winLevel: function() 
@@ -1467,6 +1500,7 @@ BoulderDash = function()
             this.flashWhenEnoughDiamondsCollected();
       
             if (this.won)
+
                 this.runOutTime();
             else if (this.frameCounter - this.foundRockford > (4 * this.FPS))
                 this.loseLevel();
@@ -1772,11 +1806,15 @@ BoulderDash = function()
         onThemeChanged: function(spriteImg)
         {
             this.sprites = spriteImg;
-            this.ctxSprites.canvas.clientWidth = canvholder.clientWidth;
-            this.ctxSprites.canvas.clientHeight = canvholder.clientHeight;
-            this.ctxSprites.canvas.width  = this.sprites.width;
-            this.ctxSprites.canvas.height = this.sprites.height;
-            this.ctxSprites.drawImage(this.sprites, 0, 0, this.sprites.width, this.sprites.height, 0, 0, this.sprites.width, this.sprites.height);
+
+            if(this.ctxSprites)
+            {
+                this.ctxSprites.canvas.clientWidth = canvholder.clientWidth;
+                this.ctxSprites.canvas.clientHeight = canvholder.clientHeight;
+                this.ctxSprites.canvas.width  = this.sprites.width;
+                this.ctxSprites.canvas.height = this.sprites.height;
+                this.ctxSprites.drawImage(this.sprites, 0, 0, this.sprites.width, this.sprites.height, 0, 0, this.sprites.width, this.sprites.height);
+            }
         },
 
         onChangeLevel: function(info) 
@@ -2239,8 +2277,8 @@ BoulderDash = function()
         
     function addEvents() 
     {
-        document.addEventListener('keydown', keydown, false);
-        document.addEventListener('keyup',   keyup,   false);
+        gameCanv.addEventListener('keydown', keydown, false);
+        gameCanv.addEventListener('keyup',   keyup,   false);
         window.addEventListener('resize', function() { render.resize() }, false);
     };
         
@@ -2262,7 +2300,7 @@ BoulderDash = function()
             case KEY.PAGEUP:     game.prevLevel();         handled = true; break;
             case KEY.PAGEDOWN:   game.nextLevel();         handled = true; break;
             case KEY.SPACE:      moving.startGrab();  handled = true; break;
-            case KEY.ESC:        if(paused)return; paused = true; currentScreen = SCREENS.MENU; drawScreen(); break;
+            case KEY.ESC:        if(paused)return; paused = true; currentScreen = SCREENS.MENU; drawScreen(); handled =true; break;
         }
 
         if (handled)
